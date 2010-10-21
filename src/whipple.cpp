@@ -1,5 +1,5 @@
 #include "whipple.h"
-int eomwrapper(double t, const double x[6], double f[6], void * params)
+int eomwrapper(double t, const double x[10], double f[10], void * params)
 {
   Whipple * p = (Whipple *) params;
   // Assign the states of the Whipple object
@@ -72,9 +72,12 @@ ostream &operator<<(ostream &file, const Whipple * discs)
   file.write((char *) &discs->Fz, sizeof discs->Fz);
   file.write((char *) &discs->ke, sizeof discs->ke);
   file.write((char *) &discs->pe, sizeof discs->pe);
-  file.write((char *) &discs->fwyaw, sizeof discs->fwyaw);
+  file.write((char *) &discs->fa_yaw, sizeof discs->fa_yaw);
+  file.write((char *) &discs->fa_lean, sizeof discs->fa_lean);
+  file.write((char *) &discs->fa_pitch, sizeof discs->fa_pitch);
+  file.write((char *) discs->constraints, sizeof discs->constraints);
   return file;
-}
+} // ostream &operator<<()
 
 void Whipple::writeRecord_dt(void) const
 {
@@ -107,21 +110,26 @@ void Whipple::writeRecord_dt(void) const
         "('Fz', np.float64)," <<
         "('ke', np.float64)," <<
         "('pe', np.float64)," <<
-        "('fwyaw', np.float64)])" << 
+        "('fa_yaw', np.float64)," <<
+        "('fa_lean', np.float64)," <<
+        "('fa_pitch', np.float64)," << 
+        "('nh1', np.float64)," << 
+        "('nh2', np.float64)," << 
+        "('nh3', np.float64)])" << 
         endl;
   fp.close();
 } // writeRecord_dt()
 
 void Whipple::printState(void) const
 {
-  cout << "q0 = " << q0 << endl
+  cout << "q0 = " << q0 << "(ignorable)" << endl
        << "q1 = " << q1 << endl
        << "q2 = " << q2 << "(dependent)" << endl
        << "q3 = " << q3 << endl
-       << "q4 = " << q4 << endl
-       << "q5 = " << q5 << endl
-       << "q6 = " << q6 << endl
-       << "q7 = " << q7 << endl
+       << "q4 = " << q4 << "(ignorable)" << endl
+       << "q5 = " << q5 << "(ignorable)" << endl
+       << "q6 = " << q6 << "(ignorable)" << endl
+       << "q7 = " << q7 << "(ignorable)" << endl
        << "u0 = " << u0 << "(dependent)" << endl
        << "u1 = " << u1 << endl
        << "u2 = " << u2 << "(dependent)" << endl
@@ -132,7 +140,7 @@ void Whipple::printState(void) const
 
 void Whipple::printParameters(void) const
 {
-}
+} // printParameters()
 
 Whipple::Whipple()
 {
@@ -141,12 +149,14 @@ Whipple::Whipple()
   initODESolver();
   // Default parameters
   setBenchmarkParameters();
-  setBenchmarkState();
-  
+  // Constants
   // zero out all the z's
   for (int i = 0; i < Z_MAX; ++i)
     z[i] = 0.0;
+  evalConstants();
 
+  setBenchmarkState();
+  
   // zero out the input torques
   Trw = Tfw = Ts = 0.0;
 
@@ -158,14 +168,8 @@ Whipple::Whipple()
   cty = .35; 
   ctz = 0.0;
   
-  // Constants
-  evalConstants();
-  eoms();
-  computeOutputs();
-
   // Write data to file to define numpy data type so that plotting is easy
   writeRecord_dt();
- 
 } // constructor
 
 Whipple::~Whipple()
@@ -174,7 +178,7 @@ Whipple::~Whipple()
   gsl_odeiv_evolve_free(e);
   gsl_odeiv_control_free(c);
   gsl_odeiv_step_free(s);
-}
+} // destructor
 
 void Whipple::setParameters(WhippleParams * p)
 {
@@ -259,10 +263,12 @@ void Whipple::setBenchmarkState(void)
 {
   q0 = q1 = q3 = q4 = q5 = q6 = q7 = 0.0;
   q2 = M_PI/10.0;
-  u1 = 0.5;
+  u1 = 0.9;
   u3 = 0.0;
-  u5 = -4.6/(rf+rft);
-}
+  u5 = -3.6/(rf+rft);
+  eoms();
+  computeOutputs();
+} // setBenchmarkState
 
 void Whipple::initRootFinder(void)
 {
@@ -279,7 +285,7 @@ void Whipple::initODESolver(void)
 {
   // Set integration settings
   t = 0.0;
-  tf = 10.0;
+  tf = 5.0;
   h = 0.001;
   fps = 100;
   T = gsl_odeiv_step_rk8pd;
@@ -290,7 +296,7 @@ void Whipple::initODESolver(void)
   sys.jacobian = NULL;
   sys.dimension = 10;
   sys.params = this;
-}
+} // initODESolver()
 
 void Whipple::calcPitch(void)
 { 
@@ -1559,7 +1565,9 @@ void Whipple::computeOutputs(void)
   z[107])-rr*z[13]*(z[98]+z[107]+z[12]*z[80]));
   z[430] = z[408] + z[397]*z[420] - z[396]*z[419] - z[398]*z[421];
   Fz = z[430];
-  fwyaw = asin(z[23]*z[33]);
+  fa_yaw = q0 + asin(z[23]*z[33]);
+  fa_lean = asin(z[28]);
+  fa_pitch = asin(z[33]*(z[14]*z[27]-z[23]*z[29]));
   z[37] = -rrt - z[35];
   z[45] = z[40] + pow(z[36],2) + pow(z[37],2) + 2*z[41]*z[15] + 2*z[42]*z[22] + 
   2*z[43]*z[14] + 2*lf*z[26]*z[37] + 2*lr*z[16]*z[36] + 2*ls*z[30]*z[37] + 2*
@@ -1669,4 +1677,16 @@ void Whipple::computeOutputs(void)
   z[21]*z[23]*(z[28]*z[51]+z[30]*z[52])-pow(z[23],2)*(z[26]*z[51]-z[30]*z[50])-
   pow(z[27],2)*(z[26]*z[51]-z[30]*z[50]));
   h2_cl[2] = 0;
+  constraints[0] = z[38]*(rrt*u1+z[35]*u1+z[14]*z[35]*u3-z[23]*z[35]*u5) + 
+  z[15]*(ls*u0*z[28]+ls*u2*z[15]+u0*z[30]*z[36]+z[36]*u3+z[14]*z[36]*u1) + 
+  z[16]*(ls*u0*z[26]+ls*u2*z[16]-lf*u0*z[30]-lf*u3-lf*z[14]*u1) - rr*z[13]*(
+  u2+u4+u0*z[12]) - z[13]*(u2*z[11]*z[35]+rrt*(u2+u4)*z[11]+z[27]*z[35]*u5-
+  z[29]*z[35]*u3);
+  constraints[1] = (rr-ls*z[13])*u1 + lr*(u0*z[30]+z[14]*u1) + z[11]*(rrt*u1+
+  z[35]*u1+z[14]*z[35]*u3-z[23]*z[35]*u5) + z[16]*(ls*u0*z[28]+u0*z[30]*z[36]+
+  z[36]*u3+z[14]*z[36]*u1) - z[15]*(ls*u0*z[26]-lf*u0*z[30]-lf*u3-lf*z[14]*u1);
+  constraints[2] = lf*z[23]*u1 - lf*u0*z[28] - lf*u2*z[15] - u0*z[26]*z[36] - 
+  u2*z[16]*z[36] - lr*(u2+u0*z[12]) - rr*z[14]*(u2+u4+u0*z[12]) - z[21]*z[36]*
+  u1 - z[29]*(rrt*u1+z[35]*u1-z[23]*z[35]*u5) - z[14]*(u2*z[11]*z[35]+rrt*(u2+
+  u4)*z[11]+z[27]*z[35]*u5);
 } // computeOutputs()
