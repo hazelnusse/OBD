@@ -8,7 +8,7 @@
 #include <gsl/gsl_odeiv.h>
 #include <gsl/gsl_roots.h>
 
-#define Z_MAX 445
+#define Z_MAX 1127
 
 using namespace std;
 
@@ -39,7 +39,7 @@ class Whipple {
     // Output quantities
     double z[Z_MAX], no_fn[3], cn_cm[3], h2_cl[3], constraints[3];
     double fa_yaw, fa_lean, fa_pitch;
-    //double A[10][10], B[10][3],C_aux[6][10];
+    double A[100], B[30],C[50];
     //double T_CN[16], T_CL[16], T_B[16], T_C[16], T_D[16], T_E[16], T_F[16];
     //double T_G[16], T_FN[16], T_CGL[16], T_FGL[16];
     double Fx,Fy,Fz,Rx,Ry,Rz,u0,u2,u4,ke,pe;
