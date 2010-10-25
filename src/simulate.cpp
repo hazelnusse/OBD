@@ -1,9 +1,6 @@
 #include <iostream>
-#include <fstream>
-#include <string>
 
 #include "whipple.h"
-
 
 int main(int argc, char ** argv)
 {
@@ -28,4 +25,3 @@ int main(int argc, char ** argv)
   cout << "Simulation completed." << endl;
   return 0;
 } // main
-
