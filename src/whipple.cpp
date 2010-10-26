@@ -153,12 +153,20 @@ Whipple::Whipple()
   // zero out all the z's
   for (int i = 0; i < Z_MAX; ++i)
     z[i] = 0.0;
-  evalConstants();
 
+  evalConstants();
   setBenchmarkState();
-  
   // zero out the input torques
   Trw = Tfw = Ts = 0.0;
+
+  // Initialize the eigenvalues and eigenvectors
+  evals = gsl_vector_complex_alloc(4);
+  evecs = gsl_matrix_complex_alloc(4, 4);
+  m = gsl_matrix_alloc(4, 4);
+  gsl_matrix_set_zero(m);
+  m->data[2] = 1.0;
+  m->data[7] = 1.0;
+  w = gsl_eigen_nonsymmv_alloc(4);
 
   // Camera settings
   theta = M_PI / 4.0;
@@ -178,6 +186,10 @@ Whipple::~Whipple()
   gsl_odeiv_evolve_free(e);
   gsl_odeiv_control_free(c);
   gsl_odeiv_step_free(s);
+  gsl_vector_complex_free(evals);
+  gsl_matrix_complex_free(evecs);
+  gsl_matrix_free(m);
+  gsl_eigen_nonsymmv_free(w);
 } // destructor
 
 void Whipple::setParameters(WhippleParams * p)
@@ -311,6 +323,66 @@ void Whipple::calcPitch(void)
   } while(status == GSL_CONTINUE && ++iter < 100);
   q2 = gsl_root_fdfsolver_root(fdf_s);
 } // calcPitch
+
+void Whipple::calcEvals(void)
+{
+  gsl_matrix_set_zero(m);  // clear all entries
+  m->data[2] = m->data[7] = 1.0;  // set the top two rows
+  // Evaluate the EOMS
+  eoms();
+  // Evaluate the 10x10 A matrix
+  computeOutputs();
+
+  // Get the 4x4 sub matrix of the 10x10 A matrix
+  m->data[8] = A[71];
+  m->data[9] = A[72];
+  m->data[10] = A[77];
+  m->data[11] = A[78];
+  m->data[12] = A[81];
+  m->data[13] = A[82];
+  m->data[14] = A[87];
+  m->data[15] = A[88];
+
+  // Get the eigenvalues
+  gsl_eigen_nonsymmv(m, evals, evecs, w);
+  getFourValues();
+} // calcEvals()
+
+void Whipple::getFourValues(void)
+{
+  int i;
+  double valr, vali;
+  if (evalCase() == 0) {
+    for (i = 0; i < 4; ++i)
+      fourValues[i] = GSL_REAL(gsl_vector_complex_get(evals, i));
+    return;
+  } else
+    for (i = 0; i < 4; ++i) {
+      vali = GSL_IMAG(gsl_vector_complex_get(evals, i)); 
+      valr = GSL_REAL(gsl_vector_complex_get(evals, i)); 
+      if (vali == 0.0) {
+        fourValues[i] = valr;
+        continue;
+      }
+      fourValues[i] = valr;
+      fourValues[++i] = vali;
+    }
+} // getFourValues()
+
+int Whipple::evalCase(void)
+{
+  int i, real = 0;
+  for (i = 0; i < 4; ++i)
+   if (GSL_IMAG(gsl_vector_complex_get(evals, i)) == 0.0)
+     ++real;
+
+  if (real == 4)
+    return 0;
+  if (real == 2)
+    return 1;
+  // Final case, real == 0
+  return 0;
+} // evalCase()
 
 void Whipple::evalConstants(void)
 {

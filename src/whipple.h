@@ -7,6 +7,7 @@
 #include <gsl/gsl_errno.h>
 #include <gsl/gsl_odeiv.h>
 #include <gsl/gsl_roots.h>
+#include <gsl/gsl_eigen.h>
 
 #define Z_MAX 1127
 
@@ -47,21 +48,29 @@ class Whipple {
     double theta, phi, d, ctx, cty, ctz;
 
     // Numerical integrator variables
-    const gsl_odeiv_step_type * T;
+    gsl_odeiv_evolve * e;
+    gsl_odeiv_control * c;
     gsl_odeiv_step * s;
-    gsl_odeiv_control * c; gsl_odeiv_evolve * e;
     gsl_odeiv_system sys;
-    int fps;
+    const gsl_odeiv_step_type * T;
+    int fps; // frames per second, controls output data time interval
+
     // Variables used for Newton-Raphson root finding algorithm
     gsl_root_fdfsolver * fdf_s;
     const gsl_root_fdfsolver_type * fdf_T;
     gsl_function_fdf FDF;
     int status, iter;
 
+    // Variables for calculating eigenvalues and eigenvectors
+    gsl_vector_complex *evals;
+    gsl_matrix_complex *evecs;
+    gsl_matrix * m;
+    gsl_eigen_nonsymmv_workspace * w;
+    double fourValues[4];
+
     // Member functions
     Whipple();
     ~Whipple();
-
 
     // Mutators
     void initRootFinder(void);
@@ -69,11 +78,15 @@ class Whipple {
     void setBenchmarkParameters(void);
     void setBenchmarkState(void);
     void calcPitch(void);
+    void calcEvals(void);
     void setState(const double state[10]);
     void setParameters(WhippleParams * p);
     void evalConstants(void);
     void eoms(void);
     void computeOutputs(void);
+    void getFourValues(void);
+    int evalCase(void);
+
     // Accessors
     void writeRecord_dt(void) const;
     void printState(void) const;

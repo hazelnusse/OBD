@@ -4,8 +4,26 @@ import matplotlib.pyplot as plt
 import os
 
 os.system('rm -rf simulation.dat')
-os.system('./src/simulate')
+os.system('./src/whipplesim')
 from record import record_dt
+
+eval_dt = np.dtype([('v', np.float64),
+                    ('lambda1', np.float64),
+                    ('lambda2', np.float64),
+                    ('lambda3', np.float64),
+                    ('lambda4', np.float64)])
+
+os.system('rm -rf eigenvalues.dat')
+os.system('./src/whippleeig')
+eval_data = np.fromfile('./eigenvalues.dat', eval_dt)
+
+# Eigenvalue plot
+plt.figure()
+plt.plot(eval_data[:]['v'], eval_data[:]['lambda1'], 'k,')
+plt.plot(eval_data[:]['v'], eval_data[:]['lambda2'], 'k,')
+plt.plot(eval_data[:]['v'], eval_data[:]['lambda3'], 'k,')
+plt.plot(eval_data[:]['v'], eval_data[:]['lambda4'], 'k,')
+plt.axis([0, 10, -10, 10])
 
 # Get the data from file and put into a custom data type -- examine
 # ./simulation.data for details on all the data fields.
