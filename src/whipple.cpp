@@ -354,7 +354,8 @@ void Whipple::calcPitch(void)
 
 void Whipple::calcEvals(void)
 {
-  gsl_matrix_set_zero(m);  // clear all entries
+  m->data[0] = m->data[1] = m->data[3] = 
+    m->data[4] = m->data[5] = m->data[6] = 0.0;
   m->data[2] = m->data[7] = 1.0;  // set the top two rows
   // Evaluate the EOMS
   eoms();

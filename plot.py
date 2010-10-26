@@ -3,10 +3,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 
-os.system('rm -rf simulation.dat')
-os.system('./src/whipplesim')
-from record import record_dt
-
 eval_dt = np.dtype([('v', np.float64),
                     ('lambda1', np.float64),
                     ('lambda2', np.float64),
@@ -14,14 +10,18 @@ eval_dt = np.dtype([('v', np.float64),
                     ('lambda4', np.float64)])
 
 evals_filename = "eigenvalues.dat"
-vi = -2.0
-vf = 12.0
-N = 201
+vi = 0.0
+vf = 10.0
+N = 501
 os.system('rm -rf ' + evals_filename)
-os.system('cd ./src && whippleeig -o ' + '../' + evals_filename +
+os.system('./src/whippleeig -o ' + evals_filename +
           ' -i ' + str(vi) + ' -f ' + str(vf) + ' -n ' + str(N))
 
 eval_data = np.fromfile(evals_filename, eval_dt)
+
+os.system('rm -rf simulation.dat')
+os.system('./src/whipplesim')
+from record import record_dt
 
 # Eigenvalue plot
 plt.figure()

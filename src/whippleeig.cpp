@@ -40,6 +40,7 @@ int main(int argc, char ** argv)
     OutputFile.write((char *) bb->fourValues, 4*sizeof(double));
   } // for i
 
+  cout << "Eigenvalue data written to " << opt->filename << "." << endl;
   OutputFile.close();
   delete bb;
   delete opt;
