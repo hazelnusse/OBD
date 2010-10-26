@@ -6,12 +6,13 @@ all: whipplesim whippleeig
 whipplesim: whipplesim.o whipple.o
 	$(CXX) -Wall -o $@ -lgsl -lcblas $^
 
-whippleeig: whipple.o whippleeig.o gslVecUtils.o
+whippleeig: whipple.o whippleeig.o whippleutils.o gslVecUtils.o
 	$(CXX) -Wall -o $@ -lgsl -lcblas $^
 
+whipple.o: whipple.cpp whipple.h
 whippleeig.o: whippleeig.cpp
 whipplesim.o: whipplesim.cpp
-whipple.o: whipple.cpp whipple.h
+whippleutils.o: whippleutils.cpp whippleutils.h
 gslVecUtils.o: gslVecUtils.cpp gslVecUtils.h
 
 clean: 

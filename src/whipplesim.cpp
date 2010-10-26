@@ -13,11 +13,9 @@ int main(int argc, char ** argv)
   for (int j = 1; j < bb->fps*bb->tf + 1; ++j) {
     tj = ((double) j) / ((double) bb->fps);
     while (bb->t < tj)
-      gsl_odeiv_evolve_apply(bb->e, bb->c, bb->s,
-                             &(bb->sys), &(bb->t), tj,
-                             &(bb->h), state);
-    bb->computeOutputs();
-    OutputFile << bb;
+      bb->evolve(tj, state);
+    bb->computeOutputs(); // Compute outputs only at desired time points
+    OutputFile << bb;     // Write quantities to file
   } // for j
 
   delete bb;

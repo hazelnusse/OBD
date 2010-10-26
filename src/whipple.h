@@ -23,6 +23,18 @@ typedef struct {
   double g,lf,lfx,lfz,lr,lrx,lrz,ls,mc,md,me,mf,rf,rft,rr,rrt;
 } WhippleParams;
 
+// Constant parameters used in the Meijaard derivation
+typedef struct {
+  double rr, rrt, rf, rft, w, c, lambda;  // Wheel and frame geometric parameters
+  double mr, mb, mh, mf;          // R. whl, rear frame, fork, F. whl mass
+  double IRxx, IRyy;              // Rear wheel inertia scalars, IRxx == IRzz
+  double IBxx, IByy, IBzz, IBxz;  // Rear frame and rider inertia scalars
+  double IHxx, IHyy, IHzz, IHxz;  // Front fork and handlebar inertia scalars
+  double IFxx, IFyy;              // Front wheel inertia scalars, IFxx == IFzz
+  double xb, zb, xh, zh;          // COM locations relative to rear contact
+  double g;
+}  MJWhippleParams;
+
 class Whipple {
   private:
 
@@ -73,19 +85,20 @@ class Whipple {
     ~Whipple();
 
     // Mutators
+    void calcEvals(void);
+    void calcPitch(void);
+    void computeOutputs(void);
+    void eoms(void);
+    void evalConstants(void);
+    int evalCase(void);
+    void evolve(double tj, double * state);
+    void getFourValues(void);
     void initRootFinder(void);
     void initODESolver(void);
     void setBenchmarkParameters(void);
     void setBenchmarkState(void);
-    void calcPitch(void);
-    void calcEvals(void);
-    void setState(const double state[10]);
     void setParameters(WhippleParams * p);
-    void evalConstants(void);
-    void eoms(void);
-    void computeOutputs(void);
-    void getFourValues(void);
-    int evalCase(void);
+    void setState(const double state[10]);
 
     // Accessors
     void writeRecord_dt(void) const;

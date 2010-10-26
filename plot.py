@@ -13,9 +13,15 @@ eval_dt = np.dtype([('v', np.float64),
                     ('lambda3', np.float64),
                     ('lambda4', np.float64)])
 
-os.system('rm -rf eigenvalues.dat')
-os.system('./src/whippleeig')
-eval_data = np.fromfile('./eigenvalues.dat', eval_dt)
+evals_filename = "eigenvalues.dat"
+vi = -2.0
+vf = 12.0
+N = 201
+os.system('rm -rf ' + evals_filename)
+os.system('cd ./src && whippleeig -o ' + '../' + evals_filename +
+          ' -i ' + str(vi) + ' -f ' + str(vf) + ' -n ' + str(N))
+
+eval_data = np.fromfile(evals_filename, eval_dt)
 
 # Eigenvalue plot
 plt.figure()
@@ -23,7 +29,7 @@ plt.plot(eval_data[:]['v'], eval_data[:]['lambda1'], 'k,')
 plt.plot(eval_data[:]['v'], eval_data[:]['lambda2'], 'k,')
 plt.plot(eval_data[:]['v'], eval_data[:]['lambda3'], 'k,')
 plt.plot(eval_data[:]['v'], eval_data[:]['lambda4'], 'k,')
-plt.axis([0, 10, -10, 10])
+plt.axis([vi, vf, -10, 10])
 
 # Get the data from file and put into a custom data type -- examine
 # ./simulation.data for details on all the data fields.

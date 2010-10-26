@@ -140,6 +140,34 @@ void Whipple::printState(void) const
 
 void Whipple::printParameters(void) const
 {
+  cout << "rr   = " << rr << endl
+       << "rrt  = " << rrt << endl
+       << "rf   = " << rf << endl
+       << "rft  = " << rft << endl
+       << "lr   = " << lr << endl
+       << "ls   = " << ls << endl
+       << "lf   = " << lf << endl
+       << "mc   = " << mc << endl
+       << "md   = " << md << endl
+       << "me   = " << me << endl
+       << "mf   = " << mf << endl
+       << "ICxx = " << ICxx << endl
+       << "ICyy = " << ICyy << endl
+       << "IDxx = " << IDxx << endl
+       << "IDyy = " << IDyy << endl
+       << "IDzz = " << IDzz << endl
+       << "IDxz = " << IDxz << endl
+       << "IExx = " << IExx << endl
+       << "IEyy = " << IEyy << endl
+       << "IEzz = " << IEzz << endl
+       << "IExz = " << IExz << endl
+       << "IFxx = " << IFxx << endl
+       << "IFyy = " << IFyy << endl
+       << "lrx  = " << lrx << endl
+       << "lrz  = " << lrz << endl
+       << "lfx  = " << lfx << endl
+       << "lfz  = " << lfz << endl
+       << "g    = " << g << endl;
 } // printParameters()
 
 Whipple::Whipple()
@@ -383,6 +411,11 @@ int Whipple::evalCase(void)
   // Final case, real == 0
   return 0;
 } // evalCase()
+
+void Whipple::evolve(double tj, double * state)
+{
+  gsl_odeiv_evolve_apply(e, c, s, &sys, &t, tj, &h, state);
+} // evolve()
 
 void Whipple::evalConstants(void)
 {
