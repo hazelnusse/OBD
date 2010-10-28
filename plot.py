@@ -2,6 +2,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import os
+import plotfunctions as pf
 
 eval_dt = np.dtype([('v', np.float64),
                     ('lambda1', np.float64),
@@ -9,27 +10,36 @@ eval_dt = np.dtype([('v', np.float64),
                     ('lambda3', np.float64),
                     ('lambda4', np.float64)])
 
-evals_filename = "eigenvalues.dat"
-vi = 0.0
-vf = 10.0
-N = 501
-os.system('rm -rf ' + evals_filename)
-os.system('./src/whippleeig -o ' + evals_filename +
-          ' -i ' + str(vi) + ' -f ' + str(vf) + ' -n ' + str(N))
+os.system('rm -rf *.dat')
+evals_filename1 = "eigenvalues1.dat"
+evals_filename2 = "eigenvalues2.dat"
+vi = -2.0
+vf = 9.0
+N = 100
+os.system('./src/whippleeig -o ' + evals_filename1 +
+          ' -i ' + str(vi) + ' -f ' + str(vf) + ' -n ' + str(N) + 
+#          ' -m ' + "../parameters/benchmark_params.txt")
+#          ' -m ' + "../parameters/awkwark_front_fork.txt")
+#          ' -m ' + "../parameters/BatavusBrowserPar.txt")
+          ' -m ' + "../parameters/test_params.txt")
+os.system('./src/whippleeig_gyro -o ' + evals_filename2 +
+          ' -i ' + str(vi) + ' -f ' + str(vf) + ' -n ' + str(N) +
+#          ' -m ' + "../parameters/benchmark_params.txt")
+#          ' -m ' + "../parameters/awkwark_front_fork.txt")
+#          ' -m ' + "../parameters/BatavusBrowserPar.txt")
+          ' -m ' + "../parameters/test_params.txt")
 
-eval_data = np.fromfile(evals_filename, eval_dt)
+eval_data1 = np.fromfile(evals_filename1, eval_dt)
+eval_data2 = np.fromfile(evals_filename2, eval_dt)
 
-os.system('rm -rf simulation.dat')
-os.system('./src/whipplesim')
-from record import record_dt
+#os.system('./src/whipplesim -m ../parameters/benchmark_params.txt')# -s ../state/benchmark_ic.txt')
+#from record import record_dt
 
-# Eigenvalue plot
-plt.figure()
-plt.plot(eval_data[:]['v'], eval_data[:]['lambda1'], 'k,')
-plt.plot(eval_data[:]['v'], eval_data[:]['lambda2'], 'k,')
-plt.plot(eval_data[:]['v'], eval_data[:]['lambda3'], 'k,')
-plt.plot(eval_data[:]['v'], eval_data[:]['lambda4'], 'k,')
-plt.axis([vi, vf, -10, 10])
+pf.plotevals(eval_data1, "")
+pf.plotevals(eval_data2, "")
+plt.show()
+stop
+
 
 # Get the data from file and put into a custom data type -- examine
 # ./simulation.data for details on all the data fields.

@@ -1,7 +1,7 @@
 #include <getopt.h>
 #include "gslVecUtils.h"
-#include "whipple.h"
-#include "whippleutils.h"
+#include "whipple_gyro.h"
+#include "whippleutils_gyro.h"
 
 // Structor to store the options
 typedef struct {

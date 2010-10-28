@@ -182,7 +182,6 @@ Whipple::Whipple()
   for (int i = 0; i < Z_MAX; ++i)
     z[i] = 0.0;
 
-  evalConstants();
   setBenchmarkState();
   // zero out the input torques
   Trw = Tfw = Ts = 0.0;
@@ -270,9 +269,9 @@ void Whipple::setState(const double state[10])
 void Whipple::setBenchmarkParameters(void)
 {
   rr=0.3;
-  rrt=0.0115;
+  rrt=0.0;
   rf=0.35;
-  rft=0.0125;
+  rft=0.0;
   lr=0.9534570696121847;
   ls=0.2676445084476887;
   lf=0.0320714267276193;
@@ -297,6 +296,7 @@ void Whipple::setBenchmarkParameters(void)
   lfx=-0.005970833924186833;
   lfz=-0.3699518200282974;
   g=9.81;
+  evalConstants();
 } // setBenchmarkParameters()
 
 void Whipple::setBenchmarkState(void)
