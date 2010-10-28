@@ -122,19 +122,19 @@ void Whipple::writeRecord_dt(void) const
 
 void Whipple::printState(void) const
 {
-  cout << "q0 = " << q0 << "(ignorable)" << endl
+  cout << "q0 = " << q0 << " (ignorable)" << endl
        << "q1 = " << q1 << endl
-       << "q2 = " << q2 << "(dependent)" << endl
+       << "q2 = " << q2 << " (dependent)" << endl
        << "q3 = " << q3 << endl
-       << "q4 = " << q4 << "(ignorable)" << endl
-       << "q5 = " << q5 << "(ignorable)" << endl
-       << "q6 = " << q6 << "(ignorable)" << endl
-       << "q7 = " << q7 << "(ignorable)" << endl
-       << "u0 = " << u0 << "(dependent)" << endl
+       << "q4 = " << q4 << " (ignorable)" << endl
+       << "q5 = " << q5 << " (ignorable)" << endl
+       << "q6 = " << q6 << " (ignorable)" << endl
+       << "q7 = " << q7 << " (ignorable)" << endl
+       << "u0 = " << u0 << " (dependent)" << endl
        << "u1 = " << u1 << endl
-       << "u2 = " << u2 << "(dependent)" << endl
+       << "u2 = " << u2 << " (dependent)" << endl
        << "u3 = " << u3 << endl
-       << "u4 = " << u4 << "(dependent)" << endl
+       << "u4 = " << u4 << " (dependent)" << endl
        << "u5 = " << u5 << endl;
 } // printState()
 
@@ -175,16 +175,22 @@ Whipple::Whipple()
   // Setup the root finder and the numerical integrator
   initRootFinder();
   initODESolver();
-  // Default parameters
-  setBenchmarkParameters();
-  // Constants
-  // zero out all the z's
-  for (int i = 0; i < Z_MAX; ++i)
-    z[i] = 0.0;
 
-  setBenchmarkState();
-  // zero out the input torques
+  // Camera settings
+  theta = M_PI / 4.0;
+  phi = 0.0;
+  d = 1.0;
+  ctx = .35;
+  cty = .35; 
+  ctz = 0.0;
+  
+  // Default inputs, parameters, and initial state
   Trw = Tfw = Ts = 0.0;
+  setBenchmarkParameters();
+  evalConstants();          // evaluate the constant z's
+  setBenchmarkState();      // set the state
+  eoms();                   // compute du_i/dt, and intermediate z's
+  computeOutputs();         // compute remaining z's and all outputs
 
   // Initialize the eigenvalues and eigenvectors
   evals = gsl_vector_complex_alloc(4);
@@ -195,14 +201,6 @@ Whipple::Whipple()
   m->data[7] = 1.0;
   w = gsl_eigen_nonsymmv_alloc(4);
 
-  // Camera settings
-  theta = M_PI / 4.0;
-  phi = 0.0;
-  d = 1.0;
-  ctx = .35;
-  cty = .35; 
-  ctz = 0.0;
-  
   // Write data to file to define numpy data type so that plotting is easy
   writeRecord_dt();
 } // constructor
@@ -296,18 +294,15 @@ void Whipple::setBenchmarkParameters(void)
   lfx=-0.005970833924186833;
   lfz=-0.3699518200282974;
   g=9.81;
-  evalConstants();
 } // setBenchmarkParameters()
 
 void Whipple::setBenchmarkState(void)
 {
   q0 = q1 = q3 = q4 = q5 = q6 = q7 = 0.0;
   q2 = M_PI/10.0;
-  u1 = 0.9;
+  u1 = 0.5;
   u3 = 0.0;
-  u5 = -3.6/(rf+rft);
-  eoms();
-  computeOutputs();
+  u5 = -4.6/(rf+rft);
 } // setBenchmarkState
 
 void Whipple::initRootFinder(void)

@@ -11,39 +11,63 @@ eval_dt = np.dtype([('v', np.float64),
                     ('lambda4', np.float64)])
 
 os.system('rm -rf *.dat')
-evals_filename1 = "eigenvalues1.dat"
-evals_filename2 = "eigenvalues2.dat"
-vi = -2.0
-vf = 9.0
-N = 100
-os.system('./src/whippleeig -o ' + evals_filename1 +
-          ' -i ' + str(vi) + ' -f ' + str(vf) + ' -n ' + str(N) + 
-#          ' -m ' + "../parameters/benchmark_params.txt")
-#          ' -m ' + "../parameters/awkwark_front_fork.txt")
-#          ' -m ' + "../parameters/BatavusBrowserPar.txt")
-          ' -m ' + "../parameters/test_params.txt")
-os.system('./src/whippleeig_gyro -o ' + evals_filename2 +
-          ' -i ' + str(vi) + ' -f ' + str(vf) + ' -n ' + str(N) +
-#          ' -m ' + "../parameters/benchmark_params.txt")
-#          ' -m ' + "../parameters/awkwark_front_fork.txt")
-#          ' -m ' + "../parameters/BatavusBrowserPar.txt")
-          ' -m ' + "../parameters/test_params.txt")
 
-eval_data1 = np.fromfile(evals_filename1, eval_dt)
-eval_data2 = np.fromfile(evals_filename2, eval_dt)
+pfiles = ['benchmark_params.txt',
+          'awkwark_front_fork.txt',
+          'BatavusBrowserPar.txt',
+          'test_params.txt']
+parameters = "../parameters/" + pfiles[3]
 
-#os.system('./src/whipplesim -m ../parameters/benchmark_params.txt')# -s ../state/benchmark_ic.txt')
-#from record import record_dt
+# options for eigenvalue generation
+vi = 0.0
+vf = 20.0
+N = 300
+evalfile1 = "eigenvalues1.dat"
+evalfile2 = "eigenvalues2.dat"
 
+os.system('./src/whippleeig ' +
+          ' -m ' + parameters +
+          ' -i ' + str(vi) +
+          ' -f ' + str(vf) +
+          ' -n ' + str(N) + 
+          ' -o ' + evalfile1)
+
+os.system('./src/whippleeig_gyro ' +
+          ' -m ' + parameters +
+          ' -i ' + str(vi) +
+          ' -f ' + str(vf) +
+          ' -n ' + str(N) + 
+          ' -o ' + evalfile2)
+
+eval_data1 = np.fromfile(evalfile1, eval_dt)
+eval_data2 = np.fromfile(evalfile2, eval_dt)
+
+# plot both eigenvalue plots
 pf.plotevals(eval_data1, "")
 pf.plotevals(eval_data2, "")
-plt.show()
-stop
 
+# options for simulation generation
+sfiles = ['benchmark_ic.txt',
+          'basumandal_states.txt',
+          'test.txt',
+          'upright.txt',
+          'uprightsteady_4.6.txt']
+initial_state = '../state/' + sfiles[0]
+tf = 5.0
+fps = 60.0
+sim_file1 = 'simulation.dat'
+
+os.system('./src/whipplesim' +
+          ' -m ' + parameters +
+          ' -s ' + initial_state +
+          ' -t ' + str(tf) +
+          ' -f ' + str(fps) +
+          ' -o ' + sim_file1)
+from record import record_dt
 
 # Get the data from file and put into a custom data type -- examine
 # ./simulation.data for details on all the data fields.
-data = np.fromfile('./simulation.dat', dtype=record_dt)
+data = np.fromfile(sim_file1, dtype=record_dt)
 
 # Configuration variable plots
 f1, (f1a1, f1a2, f1a3) = plt.subplots(3, sharex=True, sharey=False)
