@@ -66,7 +66,9 @@ os.system('./src/whipplesim_gyro' +
           ' -s ' + initial_state +
           ' -t ' + str(tf) +
           ' -f ' + str(fps) +
-          ' -o ' + sim_file2)
+          ' -o ' + sim_file2 +
+          ' -v')
+
 from record import record_dt
 
 # Get the data from file and put into a custom data type -- examine
@@ -76,9 +78,9 @@ sim_data2 = np.fromfile(sim_file2, dtype=record_dt)
 
 plot_dict = {'evals': True,
              'orientation': True,
-             'contact': False, #True,
-             'energy' : False, #True,
-             'constraintforces': False, #True,
+             'contact': True,
+             'energy' : True,
+             'constraintforces': True,
              'constraints': True}
 
 pf.makeplots(plot_dict, eval_data1, sim_data1, '')
