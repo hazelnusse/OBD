@@ -122,6 +122,7 @@ void Whipple::writeRecord_dt(void) const
 
 void Whipple::printState(void) const
 {
+  cout.precision(16);
   cout << "q0 = " << q0 << " (ignorable)" << endl
        << "q1 = " << q1 << endl
        << "q2 = " << q2 << " (dependent)" << endl
@@ -140,6 +141,7 @@ void Whipple::printState(void) const
 
 void Whipple::printParameters(void) const
 {
+  cout.precision(16);
   cout << "rr   = " << rr << endl
        << "rrt  = " << rrt << endl
        << "rf   = " << rf << endl

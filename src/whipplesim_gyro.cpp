@@ -35,6 +35,7 @@ int main(int argc, char ** argv)
 void processOptions(int argc, char ** argv, char * filename, Whipple * bike)
 {
   int c, option_index;
+  bool verbose_flag = false;
   while (1) {
     static struct option long_options[] = {
       {"help",          no_argument,       0, 'h'},
@@ -45,9 +46,10 @@ void processOptions(int argc, char ** argv, char * filename, Whipple * bike)
       {"output",        required_argument, 0, 'o'},
       {"tf",            required_argument, 0, 't'},
       {"fps",           required_argument, 0, 'f'},
+      {"verbose",       no_argument,       0, 'v'},
       {0, 0, 0, 0}};
 
-    c = getopt_long(argc, argv, "hm:p:s:g:o:t:f:", long_options, &option_index);
+    c = getopt_long(argc, argv, "hm:p:s:g:o:t:f:v", long_options, &option_index);
 
     if (c == -1) //Detect the end of the options.
       break;
@@ -63,7 +65,8 @@ void processOptions(int argc, char ** argv, char * filename, Whipple * bike)
 "  -o, --output=outputfile            write eigenvalues to outputfile\n"
 "  -s, --state=statefile              file to specify initial simulation conditions\n"
 "  -t, --tf=FP_NUMBER                 simulation time\n"
-"  -f, --fps=FP_NUMBER                output data time interval\n\n";
+"  -f, --fps=FP_NUMBER                output data time interval\n"
+"  -v, --verbose                      simulation time\n\n";
       exit(0);
     } else if (c == 'm') {
       MJWhippleParams * mjbike = new MJWhippleParams;
@@ -102,9 +105,16 @@ void processOptions(int argc, char ** argv, char * filename, Whipple * bike)
       bike->tf = atof(optarg);
     else if (c == 'f')
       bike->fps = atof(optarg);
+    else if (c == 'v')
+      verbose_flag = true;
     else {
       cout << "Invalid option." << endl;
       abort();
     }
   } // while()
+  
+  if (verbose_flag) {
+    bike->printParameters();
+    bike->printState();
+  }
 } // processOptions()
