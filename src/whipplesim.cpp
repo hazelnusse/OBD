@@ -10,13 +10,16 @@ void processOptions(int argc, char ** argv, char * filename, Whipple * bike);
 int main(int argc, char ** argv)
 {
   Whipple * bb = new Whipple();
-  char filename[512] = "simulation.dat";
+  char filename[512] = "./simulation.dat";
   processOptions(argc, argv, filename, bb);
   ofstream OutputFile(filename, ios::binary);
+
+  // Write initial conditions
   OutputFile << bb;
-  
   double tj, state[10] = {bb->q0, bb->q1, bb->q3, bb->q4, bb->q5, bb->q6,
                           bb->q7, bb->u1, bb->u3, bb->u5};
+
+  // Perform numerical integration
   for (int j = 1; j < bb->fps*bb->tf + 1; ++j) {
     tj = ((double) j) / ((double) bb->fps);
     while (bb->t < tj)
@@ -25,6 +28,7 @@ int main(int argc, char ** argv)
     OutputFile << bb;     // Write quantities to file
   } // for j
 
+  // Free memory, close files
   delete bb;
   OutputFile.close();
   cout << "Simulation completed.  Simulation output written to "
@@ -62,7 +66,7 @@ void processOptions(int argc, char ** argv, char * filename, Whipple * bike)
 "  -m, --mjparams=pfile               Meijaard bike parameters\n"
 "  -p, --params=pfile                 native bike model parameters\n"
 "  -g, --pitch_ig=FP_NUMBER           initial guess for the pitch root finder\n"
-"  -o, --output=outputfile            write eigenvalues to outputfile\n"
+"  -o, --output=folder                write eigenvalues to folder\n"
 "  -s, --state=statefile              file to specify initial simulation conditions\n"
 "  -t, --tf=FP_NUMBER                 simulation time\n"
 "  -f, --fps=FP_NUMBER                output data time interval\n"
@@ -92,9 +96,13 @@ void processOptions(int argc, char ** argv, char * filename, Whipple * bike)
       bike->calcPitch();
       bike->eoms();
       bike->computeOutputs();
-    } else if (c == 'o')
+    } else if (c == 'o') {
+      strcpy(bike->outfolder, optarg);
       strcpy(filename, optarg);
-    else if (c == 's') {
+      strcat(filename, "simulation.dat");
+      cout << "filename = " << filename << endl;
+      bike->writeRecord_dt();
+    } else if (c == 's') {
       double * state = new double[10];
       readState(state, optarg);
       bike->setState(state);

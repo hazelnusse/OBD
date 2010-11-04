@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <string.h>
 #include <cmath>
 #include <gsl/gsl_errno.h>
 #include <gsl/gsl_odeiv.h>
@@ -79,6 +80,9 @@ class Whipple {
     gsl_matrix * m;
     gsl_eigen_nonsymmv_workspace * w;
     double fourValues[4];
+
+    // Variables for data output
+    char outfolder[512];
 
     // Member functions
     Whipple();

@@ -1,0 +1,60 @@
+# @configure_input@
+
+# Package-specific substitution variables
+package = @PACKAGE_NAME@
+version = @PACKAGE_VERSION@
+tarname = @PACKAGE_TARNAME@
+distdir = $(tarname)-$(version)
+
+# Prefix-specific substitution variables
+prefix			=	@prefix@
+exec_prefix		=	@exec_prefix@
+bindir			=	@bindir@
+
+# VPATH-specific substitution variables
+srcdir			= @srcdir@
+VPATH			= @srcdir@
+
+CC = gcc
+CFLAGS = -Wall -g -O3
+CXX = g++
+CXXFLAGS = -Wall -g -O3
+
+Makefile: Makefile.in ../config.status
+	cd .. && ./config.status src/$@
+
+../config.status: ../configure
+	cd .. && ./config.status --recheck
+
+all: whipplesim whippleeig
+
+check: all
+	./whipplesim | grep "Simulation completed.  Simulation output written to ./simulation.dat"
+	@printf "*** Simulation test passed ***"
+	./whippleeig | grep "Eigenvalue data written to eigenvalues.dat."
+	@printf "*** Eigenvalue test passed ***"
+
+install: 
+	install -d $(DESTDIR)$(bindir)
+	install -m 0755 sdsim $(DESTDIR)$(bindir)
+
+uninstall:
+	rm -rf $(DESTDIR)$(bindir)/sdsim
+
+whipplesim: whipple.o whipple_al.o whippleutils.o whipplesim.o 
+	$(CXX) -Wall -o $@ -lm -lgslcblas -lgsl $^
+
+whippleeig: whipple.o whipple_al.o whippleeig.o whippleutils.o gslVecUtils.o
+	$(CXX) -Wall -o $@ -lm -lgslcblas -lgsl $^
+
+whipple.o: whipple.cpp whipple.h
+whipple_al.o: whipple_al.cpp whipple.h
+whippleeig.o: whippleeig.cpp
+whipplesim.o: whipplesim.cpp
+whippleutils.o: whippleutils.cpp whippleutils.h
+gslVecUtils.o: gslVecUtils.cpp gslVecUtils.h
+
+clean: 
+	rm -rf *.o whipplesim whippleeig
+
+.PHONY: all clean check install uninstall

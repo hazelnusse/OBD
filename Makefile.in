@@ -1,0 +1,65 @@
+# @configure_input@
+
+# Package-specific substitution variables
+package = @PACKAGE_NAME@
+version = @PACKAGE_VERSION@
+tarname = @PACKAGE_TARNAME@
+distdir = $(tarname)-$(version)
+
+# Prefix-specific substitution variables
+prefix			=	@prefix@
+exec_prefix		=	@exec_prefix@
+bindir			=	@bindir@
+
+# VPATH-specific substitution variables
+srcdir			= @srcdir@
+VPATH			= @srcdir@
+
+all clean check install uninstall whippleeig whipplesim:
+	cd src && $(MAKE) $@
+
+dist: $(distdir).tar.bz2
+
+$(distdir).tar.bz2: $(distdir)
+	tar cjf $@ $(distdir)
+	rm -rf $(distdir)
+
+$(distdir): FORCE
+	mkdir -p $(distdir)/src
+	cp configure.ac $(distdir)
+	cp configure $(distdir)
+	cp Makefile.in $(distdir)
+	cp src/Makefile.in $(distdir)/src
+	cp src/*.cpp $(distdir)/src
+	cp src/*.h $(distdir)/src
+
+FORCE:
+	rm -rf $(distdir).tar.bz2
+	rm -rf $(distdir)
+
+distcheck: $(distdir).tar.bz2
+	tar xvf $<
+	cd $(distdir) && ./configure
+	cd $(distdir) && $(MAKE) all
+	cd $(distdir) && $(MAKE) check
+	cd $(distdir) && $(MAKE) DESTDIR=$${PWD}/_inst install
+	cd $(distdir) && $(MAKE) DESTDIR=$${PWD}/_inst uninstall
+	@remaining="`find $${PWD}/$(distdir)/_inst -type f | wc -l~"; \
+	if test "$${remaining}" -ne 0; then \
+	  echo "*** $${remaining} file(s) remaining in stage directory!"; \
+	  exit 1;
+	fi
+	cd $(distdir) && $(MAKE) clean
+	rm -rf $(distdir)
+	@printf "*** Package $(distdir).tar.bz2 is ready for distribution."
+
+distclean:
+	rm -rf $(distdir).tar.bz2
+
+Makefile: Makefile.in config.status
+	./config.status $@
+
+config.status: configure
+	./config.status --recheck
+
+.PHONY : all clean dist distcheck distclean FORCE install uninstall
