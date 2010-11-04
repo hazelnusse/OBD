@@ -11,7 +11,7 @@
 //#include <math.h>
 #include <string.h>
 //#include <getopt.h>
-#include "whipple_gyro.h"
+#include "whipple.h"
 
 // Convert Meijaard Bike Parameters to my model parameters
 void convertParameters(WhippleParams *bout, const MJWhippleParams * bin);
@@ -28,7 +28,7 @@ void readMJWhippleParams(MJWhippleParams *mjbike, const char *filename);
 void readWhippleParams(WhippleParams * bike, const char * filename);
 
 // Read the state variables from file set state of Whipple object
-void readState(double * bike, const char * filename);
+void readState(double * state, const char * filename);
 
 // Read the integration parameters from a text file
 //void readIntegrationParams(BikeParams *bike, const char *filename);

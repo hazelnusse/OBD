@@ -3,6 +3,7 @@
 // Converts Meijaard's parameter set to my parameter set
 void convertParameters(WhippleParams * bout, const MJWhippleParams * bin)
 {
+  double z[22];
   // wheel dimensions are the same in both models
   bout->rr = bin->rr;
   bout->rrt = bin->rrt;
@@ -15,35 +16,47 @@ void convertParameters(WhippleParams * bout, const MJWhippleParams * bin)
   bout->lf = (bin->rf + bin->rft)*sin(bin->lambda) - bin->c*cos(bin->lambda);
 
   // converting mass parameters
-  bout->mc = bin->mr;
-  bout->md = bin->mb;
-  bout->me = bin->mh;
-  bout->mf = bin->mf;
-
-  bout->ICxx = bin->IRxx;
-  bout->ICyy = bin->IRyy;
-
-  bout->IDxx = bin->IBxx*pow(cos(bin->lambda), 2)+bin->IBzz*pow(sin(bin->lambda), 2)-2*bin->IBxz*sin(bin->lambda)*cos(bin->lambda);
-  bout->IDyy = bin->IByy;
-  bout->IDzz = bin->IBxx*pow(sin(bin->lambda), 2) +bin->IBzz*pow(cos(bin->lambda), 2)+2*bin->IBxz*sin(bin->lambda)*cos(bin->lambda);
-  bout->IDxz = bin->IBxz+sin(bin->lambda)*(bin->IBxx*cos(bin->lambda)-2*bin->IBxz*sin(bin->lambda)-bin->IBzz*cos(bin->lambda));
-
-  bout->IExx = bin->IHxx*pow(cos(bin->lambda), 2)+bin->IHzz*pow(sin(bin->lambda), 2) - 2*bin->IHxz*sin(bin->lambda)*cos(bin->lambda);
-  bout->IEyy = bin->IHyy;
-  bout->IEzz = bin->IHxx*pow(sin(bin->lambda), 2)+bin->IHzz*pow(cos(bin->lambda), 2)+2*bin->IHxz*sin(bin->lambda)*cos(bin->lambda);
-  bout->IExz = bin->IHxz+sin(bin->lambda)*(bin->IHxx*cos(bin->lambda)-2*bin->IHxz*sin(bin->lambda)-bin->IHzz*cos(bin->lambda));
-
-  bout->IFxx = bin->IFxx;
-  bout->IFyy = bin->IFyy;
-
-  bout->lrx = cos(bin->lambda)*bin->xb - sin(bin->lambda)*(bin->zb + bin->rr + bin->rrt);
-  bout->lrz = sin(bin->lambda)*bin->xb + cos(bin->lambda)*(bin->zb + bin->rr + bin->rrt);
-
-  bout->lfx = cos(bin->lambda)*(-bin->w + bin->xh) - sin(bin->lambda)*(bin->zh + bin->rf + bin->rft);
-  bout->lfz = sin(bin->lambda)*(-bin->w + bin->xh) + cos(bin->lambda)*(bin->zh + bin->rf + bin->rft);
-
-  //bout->lambda = bin->lambda;
+  bout->mr = bin->mb + bin->mr;
+  bout->mf = bin->mf + bin->mh;
   bout->g = bin->g;
+
+  z[1] = cos(bin->lambda);
+  z[6] = bin->mb + bin->mr;
+  z[7] = bin->mb*bin->xb/z[6];
+  z[2] = sin(bin->lambda);
+  z[3] = -bin->rr - bin->rrt;
+  z[5] = bin->zb - z[3];
+  z[8] = bin->mb*z[5]/z[6];
+  bout->lrx = z[1]*z[7] - z[2]*z[8];
+  bout->lrz = z[1]*z[8] + z[2]*z[7];
+  z[9] = bin->xh - bin->w;
+  z[11] = bin->mf + bin->mh;
+  z[12] = bin->mh*z[9]/z[11];
+  z[4] = -bin->rf - bin->rft;
+  z[10] = bin->zh - z[4];
+  z[13] = bin->mh*z[10]/z[11];
+  bout->lfx = z[1]*z[12] - z[2]*z[13];
+  bout->lfz = z[1]*z[13] + z[2]*z[12];
+  bout->mr = bin->mb + bin->mr;
+  bout->mf = bin->mf + bin->mh;
+  bout->ICyy = bin->IRyy;
+  z[14] = bin->mr*(pow(z[7],2)+pow(z[8],2)) + bin->mb*(pow((bin->xb-z[7]),2)+pow((bin->zb-z[3]-z[8]),2));
+  z[17] = bin->IBzz + bin->IRxx - bin->mr*pow(z[8],2) - bin->mb*pow((bin->zb-z[3]-z[8]),2);
+  z[15] = bin->IBxx + bin->IRxx - bin->mr*pow(z[7],2) - bin->mb*pow((bin->xb-z[7]),2);
+  z[16] = bin->IBxz - bin->mr*z[7]*z[8] - bin->mb*(bin->xb-z[7])*(bin->zb-z[3]-z[8]);
+  bout->IDxx = z[14] + z[17]*pow(z[2],2) + z[1]*(z[1]*z[15]-2*z[2]*z[16]);
+  bout->IDyy = bin->IByy + z[14];
+  bout->IDzz = z[14] + z[15]*pow(z[2],2) + z[1]*(z[1]*z[17]+2*z[2]*z[16]);
+  bout->IDxz = z[1]*(z[1]*z[16]+z[2]*z[15]) - z[2]*(z[1]*z[17]+z[2]*z[16]);
+  z[18] = bin->mf*(pow(z[12],2)+pow(z[13],2)) + bin->mh*(pow((bin->xh-bin->w-z[12]),2)+pow((bin->zh-z[4]-z[13]),2));
+  z[21] = bin->IFxx + bin->IHzz - bin->mf*pow(z[13],2) - bin->mh*pow((bin->zh-z[4]-z[13]),2);
+  z[19] = bin->IFxx + bin->IHxx - bin->mf*pow(z[12],2) - bin->mh*pow((bin->xh-bin->w-z[12]),2);
+  z[20] = bin->IHxz - bin->mf*z[12]*z[13] - bin->mh*(bin->xh-bin->w-z[12])*(bin->zh-z[4]-z[13]);
+  bout->IExx = z[18] + z[21]*pow(z[2],2) + z[1]*(z[1]*z[19]-2*z[2]*z[20]);
+  bout->IEyy = bin->IHyy + z[18];
+  bout->IEzz = z[18] + z[19]*pow(z[2],2) + z[1]*(z[1]*z[21]+2*z[2]*z[20]);
+  bout->IExz = z[1]*(z[1]*z[20]+z[2]*z[19]) - z[2]*(z[1]*z[21]+z[2]*z[20]);
+  bout->IFyy = bin->IFyy;
 } // convertParameters()
 
 void setBenchmarkParameters(MJWhippleParams * bike)
@@ -224,16 +237,10 @@ void readWhippleParams(WhippleParams * bike, const char *filename)
       bike->ls = val;
     else if (strcmp(param, "lf") == 0)
       bike->lf = val;
-    else if (strcmp(param, "mc") == 0)
-      bike->mc = val;
-    else if (strcmp(param, "md") == 0)
-      bike->md = val;
-    else if (strcmp(param, "me") == 0)
-      bike->me = val;
+    else if (strcmp(param, "mr") == 0)
+      bike->mr = val;
     else if (strcmp(param, "mf") == 0)
       bike->mf = val;
-    else if (strcmp(param, "ICxx") == 0)
-      bike->ICxx = val;
     else if (strcmp(param, "ICyy") == 0)
       bike->ICyy = val;
     else if (strcmp(param, "IDxx") == 0)
@@ -252,8 +259,6 @@ void readWhippleParams(WhippleParams * bike, const char *filename)
       bike->IEzz = val;
     else if (strcmp(param, "IExz") == 0)
       bike->IExz = val;
-    else if (strcmp(param, "IFxx") == 0)
-      bike->IFxx = val;
     else if (strcmp(param, "IFyy") == 0)
       bike->IFyy = val;
     else if (strcmp(param, "lrx") == 0)
@@ -333,7 +338,6 @@ void readState(double * state, const char *filename)
 
   fp.close();
 } // readState
-
 /*
 void readIntegrationParams(BikeParams *bike, const char *filename)
 {

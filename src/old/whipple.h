@@ -9,7 +9,7 @@
 #include <gsl/gsl_roots.h>
 #include <gsl/gsl_eigen.h>
 
-#define Z_MAX 987
+#define Z_MAX 1127
 
 using namespace std;
 
@@ -19,8 +19,8 @@ extern "C" {
 
 // Constant parameters used in the model derivation
 typedef struct {
-  double ICyy,IDxx,IDxz,IDyy,IDzz,IExx,IExz,IEyy,IEzz,IFyy;
-  double g,lf,lfx,lfz,lr,lrx,lrz,ls,mr,mf,rf,rft,rr,rrt;
+  double ICxx,ICyy,IDxx,IDxz,IDyy,IDzz,IExx,IExz,IEyy,IEzz,IFxx,IFyy;
+  double g,lf,lfx,lfz,lr,lrx,lrz,ls,mc,md,me,mf,rf,rft,rr,rrt;
 } WhippleParams;
 
 // Constant parameters used in the Meijaard derivation
@@ -41,8 +41,8 @@ class Whipple {
   public:
     double t, tf, h;
     // Constant parameters
-    double ICyy,IDxx,IDxz,IDyy,IDzz,IExx,IExz,IEyy,IEzz,IFyy;
-    double g,lf,lfx,lfz,lr,lrx,lrz,ls,mr,mf,rf,rft,rr,rrt;
+    double ICxx,ICyy,IDxx,IDxz,IDyy,IDzz,IExx,IExz,IEyy,IEzz,IFxx,IFyy;
+    double g,lf,lfx,lfz,lr,lrx,lrz,ls,mc,md,me,mf,rf,rft,rr,rrt;
     // State variables, and their derivatives
     double q0,q1,q2,q3,q4,q5,q6,q7,u1,u3,u5;
     double q0p,q1p,q2p,q3p,q4p,q5p,q6p,q7p,u1p,u3p,u5p;

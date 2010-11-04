@@ -1,7 +1,7 @@
 #include <getopt.h>
 #include "gslVecUtils.h"
-#include "whipple_gyro.h"
-#include "whippleutils_gyro.h"
+#include "whipple.h"
+#include "whippleutils.h"
 
 // Structor to store the options
 typedef struct {
@@ -71,8 +71,8 @@ void processOptions(int argc, char ** argv, evalOptions * opt, Whipple * bike)
 "usage: " << argv[0] << " [OPTION]\n\n"
 "Mandatory arguments to long options are mandatory for short options too.\n\n"
 "  -h, --help                         display this help and exit.\n"
-"  -m, --Meijaard-parameters=pfile    Meijaard bike parameters\n"
-"  -p, --parameters=pfile             native bike parameters\n"
+"  -m, --mjparams=pfile               Meijaard bike parameters\n"
+"  -p, --parameters=pfile             native bike model parameters\n"
 "  -g, --pitch_ig=FP_NUMBER           initial guess for the pitch root finder\n"
 "  -n, --points=201                   # of points to compute e-vals at\n"
 "  -i, --vi=0.0                       initial speed\n"

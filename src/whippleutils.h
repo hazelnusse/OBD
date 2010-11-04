@@ -28,7 +28,7 @@ void readMJWhippleParams(MJWhippleParams *mjbike, const char *filename);
 void readWhippleParams(WhippleParams * bike, const char * filename);
 
 // Read the state variables from file set state of Whipple object
-void readState(double * state, const char * filename);
+void readState(double * bike, const char * filename);
 
 // Read the integration parameters from a text file
 //void readIntegrationParams(BikeParams *bike, const char *filename);

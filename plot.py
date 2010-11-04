@@ -23,7 +23,6 @@ vi = 0.0
 vf = 20.0
 N = 300
 evalfile1 = "eigenvalues1.dat"
-evalfile2 = "eigenvalues2.dat"
 
 os.system('./src/whippleeig ' +
           ' -m ' + parameters +
@@ -32,15 +31,7 @@ os.system('./src/whippleeig ' +
           ' -n ' + str(N) + 
           ' -o ' + evalfile1)
 
-os.system('./src/whippleeig_gyro ' +
-          ' -m ' + parameters +
-          ' -i ' + str(vi) +
-          ' -f ' + str(vf) +
-          ' -n ' + str(N) + 
-          ' -o ' + evalfile2)
-
 eval_data1 = np.fromfile(evalfile1, eval_dt)
-eval_data2 = np.fromfile(evalfile2, eval_dt)
 
 # options for simulation generation
 sfiles = ['benchmark_ic.txt',
@@ -61,20 +52,11 @@ os.system('./src/whipplesim' +
           ' -f ' + str(fps) +
           ' -o ' + sim_file1)
 
-os.system('./src/whipplesim_gyro' +
-          ' -m ' + parameters +
-          ' -s ' + initial_state +
-          ' -t ' + str(tf) +
-          ' -f ' + str(fps) +
-          ' -o ' + sim_file2 +
-          ' -v')
-
 from record import record_dt
 
 # Get the data from file and put into a custom data type -- examine
 # ./simulation.data for details on all the data fields.
 sim_data1 = np.fromfile(sim_file1, dtype=record_dt)
-sim_data2 = np.fromfile(sim_file2, dtype=record_dt)
 
 plot_dict = {'evals': True,
              'orientation': True,
@@ -84,6 +66,5 @@ plot_dict = {'evals': True,
              'constraints': True}
 
 pf.makeplots(plot_dict, eval_data1, sim_data1, '')
-pf.makeplots(plot_dict, eval_data2, sim_data2, '')
 
 plt.show()
