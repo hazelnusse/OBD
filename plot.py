@@ -90,12 +90,9 @@ t = (str(ts[0]) + '_'  + str(ts[1]) + '_' +
      str(ts[4]) + '_' + str(ts[5]))
 tarball_name = "results" + t + ".tar.bz2"
 
-os.system('cd results && python plotter.py')
-os.system('tar cjf ' + outfolder + tarball_name + " " + 
-           outfolder + '*.pdf ' +
-           outfolder + '*.txt ' +
-           outfolder + '*.dat ' +
-           outfolder + '*.py')
+os.system('cd ' + outfolder + ' && python plotter.py && ' +
+          'tar cjf ' + tarball_name + ' ' + 
+           '*.pdf *.txt *.dat *.py')
 print("tarball written to " + outfolder + tarball_name)
 
 os.system('rm -rf ' + 
