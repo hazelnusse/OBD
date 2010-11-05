@@ -20,13 +20,14 @@ CFLAGS = -Wall -g -O3
 CXX = g++
 CXXFLAGS = -Wall -g -O3
 
+all: whipplesim whippleeig
+
 Makefile: Makefile.in ../config.status
 	cd .. && ./config.status src/$@
 
 ../config.status: ../configure
 	cd .. && ./config.status --recheck
 
-all: whipplesim whippleeig
 
 check: all
 	./whipplesim | grep "Simulation completed.  Simulation output written to ./simulation.dat"
@@ -42,10 +43,10 @@ uninstall:
 	rm -rf $(DESTDIR)$(bindir)/sdsim
 
 whipplesim: whipple.o whipple_al.o whippleutils.o whipplesim.o 
-	$(CXX) -Wall -o $@ -lm -lgslcblas -lgsl $^
+	$(CXX) -Wall -o $@ -lm -lgsl -lcblas -latlas $^
 
 whippleeig: whipple.o whipple_al.o whippleeig.o whippleutils.o gslVecUtils.o
-	$(CXX) -Wall -o $@ -lm -lgslcblas -lgsl $^
+	$(CXX) -Wall -o $@ -lm -lgsl -lcblas -latlas $^
 
 whipple.o: whipple.cpp whipple.h
 whipple_al.o: whipple_al.cpp whipple.h

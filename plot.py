@@ -2,27 +2,29 @@
 import numpy as np
 import os
 
-# Folder to store input parameters and initial conditions, output data and
-# generated plots:
+# Folder to store all simulation input and output for each run
 outfolder = "./results/"
+
+# Parameter files: TODO change where these are located
 pfiles = ['benchmark_params.txt',
           'awkwark_front_fork.txt',
           'BatavusBrowserPar.txt',
           'test_params.txt']
 parameters = "../parameters/" + pfiles[0]
 
+# TODO add this information to a text file of some sort that is stored along
+# with the eigenvalue output data
 # options for eigenvalue generation
 vi = 0.0
 vf = 20.0
 N = 300
-evalfile = outfolder + "eigenvalues.dat"
 
 os.system('./src/whippleeig ' +
           ' -m ' + parameters +
           ' -i ' + str(vi) +
           ' -f ' + str(vf) +
           ' -n ' + str(N) + 
-          ' -o ' + evalfile)
+          ' -o ' + outfolder)
 
 # options for simulation generation
 sfiles = ['benchmark_ic.txt',
@@ -41,22 +43,27 @@ os.system('./src/whipplesim' +
           ' -f ' + str(fps) +
           ' -o ' + outfolder)
 
+# Copy the parameters and initial state that were used as inputs to the
+# eigenanalysis / simulation
 os.system("cp " + parameters + " " + outfolder + "bike_parameters.txt")
 os.system("cp " + initial_state + " " + outfolder + "initial_conditions.txt")
 os.system("cp plotfunctions.py " + outfolder)
 
+# Code that is packaged along with data so that people can regenerate the
+# plots.
 makeplots=\
 """import numpy as np
 import plotfunctions as pf
 import matplotlib.pyplot as plt
-
-from record import record_dt, eval_dt
+from sim_record import sim_dt
+from eval_record import eval_dt
 
 # Get the data from file and put into a custom data type -- examine
-# ./simulation.data for details on all the data fields.
-sim_data = np.fromfile("simulation.dat", dtype=record_dt)
+# ./record.py for details on all the data fields.
+sim_data = np.fromfile("simulation.dat", dtype=sim_dt)
 eval_data = np.fromfile("eigenvalues.dat", dtype=eval_dt)
 
+# Choose which plots to generate here
 plot_dict = {'evals': True,
              'orientation': True,
              'contact': True,
@@ -64,9 +71,11 @@ plot_dict = {'evals': True,
              'constraintforces': True,
              'constraints': True}
 
-pf.makeplots(plot_dict, eval_data, sim_data, '')
+# Make the plots and save them to file
+pf.makeplots(plot_dict, eval_data, sim_data, folder='')
 
-plt.show()
+# Display the plots on screen
+# plt.show()
 """
 
 fp = open(outfolder + "plotter.py", "w")

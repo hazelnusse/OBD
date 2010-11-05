@@ -3,7 +3,7 @@
 
 AC_PREREQ([2.67])
 AC_INIT([Open Bicycle Dynamics], [0.1], [hazelnusse@gmail.com])
-AC_CONFIG_SRCDIR([src/gslVecUtils.cpp])
+AC_CONFIG_SRCDIR([src/whipple.cpp])
 
 # Checks for programs.
 AC_PROG_CXX
@@ -15,7 +15,6 @@ AC_CHECK_LIB([gslcblas],[cblas_dgemm])
 AC_CHECK_LIB([gsl],[gsl_blas_dgemm])
 
 # Checks for header files.
-AC_CHECK_HEADERS([string.h])
 AC_CHECK_HEADERS([getopt.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
@@ -25,5 +24,8 @@ AC_C_INLINE
 # Checks for library functions.
 AC_CHECK_FUNCS([floor pow sqrt])
 
+# Process Makefile.in and src/Makefile.in
 AC_CONFIG_FILES([Makefile src/Makefile])
+
+# Generate configure script
 AC_OUTPUT

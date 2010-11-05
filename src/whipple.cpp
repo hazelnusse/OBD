@@ -79,56 +79,72 @@ ostream &operator<<(ostream &file, const Whipple * discs)
   return file;
 } // ostream &operator<<()
 
-void Whipple::writeRecord_dt(void) const
+void Whipple::writeSimRecord_dt(const char * filename) const
 {
-  char * filename = new char[512];
-  strcpy(filename, outfolder);
-  strcat(filename, "record.py");
   ofstream fp(filename, ios::out);
-  fp << "#!/usr/bin/env python" << endl;
-  fp << "import numpy as np" << endl;
-  fp << "record_dt = np.dtype([('t', np.float64), " <<
-        "('q0', np.float64), " <<
-        "('q1', np.float64), " <<
-        "('q2', np.float64), " <<
-        "('q3', np.float64), " <<
-        "('q4', np.float64), " <<
-        "('q5', np.float64), " <<
-        "('q6', np.float64), " <<
-        "('q7', np.float64), " <<
-        "('u0', np.float64), " <<
-        "('u1', np.float64), " <<
-        "('u2', np.float64), " <<
-        "('u3', np.float64), " <<
-        "('u4', np.float64), " <<
-        "('u5', np.float64)," <<
-        "('fnx', np.float64)," <<
-        "('fny', np.float64)," <<
-        "('fnz', np.float64)," <<
-        "('Rx', np.float64)," <<
-        "('Ry', np.float64)," <<
-        "('Rz', np.float64)," <<
-        "('Fx', np.float64)," <<
-        "('Fy', np.float64)," <<
-        "('Fz', np.float64)," <<
-        "('ke', np.float64)," <<
-        "('pe', np.float64)," <<
-        "('fa_yaw', np.float64)," <<
-        "('fa_lean', np.float64)," <<
-        "('fa_pitch', np.float64)," << 
-        "('nh1', np.float64)," << 
-        "('nh2', np.float64)," << 
-        "('nh3', np.float64)])" << 
-        endl;
-  fp << "eval_dt = np.dtype([('v', np.float64), " <<
-        "('lambda1', np.float64), " <<
-        "('lambda2', np.float64), " <<
-        "('lambda3', np.float64), " <<
-        "('lambda4', np.float64)])" << endl;
-  fp.close();
-  cout << "Output data record definition file written to " << filename << endl;
-  delete [] filename;
-} // writeRecord_dt()
+  if (fp.is_open()) {
+    fp << "import numpy as np" << endl;
+    fp << "sim_dt = np.dtype([('t', np.float64)," << endl <<
+          "                   ('q0', np.float64)," << endl <<
+          "                   ('q1', np.float64)," << endl <<
+          "                   ('q2', np.float64)," << endl <<
+          "                   ('q3', np.float64)," << endl <<
+          "                   ('q4', np.float64)," << endl <<
+          "                   ('q5', np.float64)," << endl <<
+          "                   ('q6', np.float64)," << endl <<
+          "                   ('q7', np.float64)," << endl <<
+          "                   ('u0', np.float64)," << endl <<
+          "                   ('u1', np.float64)," << endl <<
+          "                   ('u2', np.float64)," << endl <<
+          "                   ('u3', np.float64)," << endl <<
+          "                   ('u4', np.float64)," << endl <<
+          "                   ('u5', np.float64)," << endl <<
+          "                   ('fnx', np.float64)," << endl <<
+          "                   ('fny', np.float64)," << endl <<
+          "                   ('fnz', np.float64)," << endl <<
+          "                   ('Rx', np.float64)," << endl <<
+          "                   ('Ry', np.float64)," << endl <<
+          "                   ('Rz', np.float64)," << endl <<
+          "                   ('Fx', np.float64)," << endl <<
+          "                   ('Fy', np.float64)," << endl <<
+          "                   ('Fz', np.float64)," << endl <<
+          "                   ('ke', np.float64)," << endl <<
+          "                   ('pe', np.float64)," << endl <<
+          "                   ('fa_yaw', np.float64)," << endl <<
+          "                   ('fa_lean', np.float64)," << endl <<
+          "                   ('fa_pitch', np.float64)," << endl <<
+          "                   ('nh1', np.float64)," << endl <<
+          "                   ('nh2', np.float64)," << endl <<
+          "                   ('nh3', np.float64)])" << endl;
+    fp.close();
+    cout << "Output simulation data record definition file written to "
+         << filename << endl;
+  } else {
+    cerr << "Unable to open " << filename << "for writing." << endl;
+    cerr << "Aborting." << endl;
+    exit(0);
+  }
+} // writeSimRecord_dt()
+
+void Whipple::writeEvalRecord_dt(const char * filename) const
+{
+  ofstream fp(filename, ios::out);
+  if (fp.is_open()) {
+    fp << "import numpy as np" << endl;
+    fp << "eval_dt = np.dtype([('v', np.float64)," << endl <<
+          "                    ('lambda1', np.float64)," << endl <<
+          "                    ('lambda2', np.float64)," << endl <<
+          "                    ('lambda3', np.float64)," << endl <<
+          "                    ('lambda4', np.float64)])" << endl;
+    fp.close();
+    cout << "Output eigenvalue data record definition file written to "
+         << filename << endl;
+  } else {
+    cerr << "Unable to open " << filename << "for writing." << endl;
+    cerr << "Aborting." << endl;
+    exit(0);
+  }
+} // writeEvalRecord_dt()
 
 void Whipple::printState(void) const
 {
@@ -178,6 +194,68 @@ void Whipple::printParameters(void) const
        << "g    = " << g << endl;
 } // printParameters()
 
+void Whipple::writeState(const char * filename) const
+{
+  ofstream fp(filename, ios::out);
+  fp.precision(16);
+  if (fp.is_open()) {
+  fp << "q0 = " << q0 << " (ignorable coordinate)" << endl
+     << "q1 = " << q1 << endl
+     << "q2 = " << q2 << " (dependent coordinate)" << endl
+     << "q3 = " << q3 << endl
+     << "q4 = " << q4 << " (ignorable coordinate)" << endl
+     << "q5 = " << q5 << " (ignorable coordinate)" << endl
+     << "q6 = " << q6 << " (ignorable coordinate)" << endl
+     << "q7 = " << q7 << " (ignorable coordinate)" << endl
+     << "u0 = " << u0 << " (dependent speed)" << endl
+     << "u1 = " << u1 << endl
+     << "u2 = " << u2 << " (dependent speed)" << endl
+     << "u3 = " << u3 << endl
+     << "u4 = " << u4 << " (dependent speed)" << endl
+     << "u5 = " << u5 << endl;
+  } else {
+    cerr << "Unable to open " << filename << "for writing." << endl;
+    cerr << "Aborting." << endl;
+    exit(0);
+  }
+} // writeState()
+
+void Whipple::writeParameters(const char * filename) const
+{
+  ofstream fp(filename, ios::out);
+  fp.precision(16);
+  if (fp.is_open()) {
+  fp << "rr   = " << rr << endl
+     << "rrt  = " << rrt << endl
+     << "rf   = " << rf << endl
+     << "rft  = " << rft << endl
+     << "lr   = " << lr << endl
+     << "ls   = " << ls << endl
+     << "lf   = " << lf << endl
+     << "mr   = " << mr << endl
+     << "mf   = " << mf << endl
+     << "ICyy = " << ICyy << endl
+     << "IDxx = " << IDxx << endl
+     << "IDyy = " << IDyy << endl
+     << "IDzz = " << IDzz << endl
+     << "IDxz = " << IDxz << endl
+     << "IExx = " << IExx << endl
+     << "IEyy = " << IEyy << endl
+     << "IEzz = " << IEzz << endl
+     << "IExz = " << IExz << endl
+     << "IFyy = " << IFyy << endl
+     << "lrx  = " << lrx << endl
+     << "lrz  = " << lrz << endl
+     << "lfx  = " << lfx << endl
+     << "lfz  = " << lfz << endl
+     << "g    = " << g << endl;
+  } else {
+    cerr << "Unable to open " << filename << "for writing." << endl;
+    cerr << "Aborting." << endl;
+    exit(0);
+  }
+} // writeParameters()
+
 Whipple::Whipple()
 {
   // Setup the root finder and the numerical integrator
@@ -208,11 +286,6 @@ Whipple::Whipple()
   m->data[2] = 1.0;
   m->data[7] = 1.0;
   w = gsl_eigen_nonsymmv_alloc(4);
-
-  // Set default output directory to current directory
-  strcpy(outfolder, "./");
-  // Write data to file to define numpy data type so that plotting is easy
-  // writeRecord_dt();
 } // constructor
 
 Whipple::~Whipple()

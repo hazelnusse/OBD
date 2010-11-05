@@ -1,18 +1,31 @@
 #include <iostream>
+#include <string>
 #include <getopt.h>
 #include "whippleutils.h"
 #include "whipple.h"
 #include "gslVecUtils.h"
 
 // Forward declaration
-void processOptions(int argc, char ** argv, char * filename, Whipple * bike);
+void processOptions(int argc, char ** argv, char * outfolder, Whipple * bike);
 
 int main(int argc, char ** argv)
 {
   Whipple * bb = new Whipple();
-  char filename[512] = "./simulation.dat";
-  processOptions(argc, argv, filename, bb);
-  ofstream OutputFile(filename, ios::binary);
+  char outfolder[512] = "./";
+  string filename;
+
+  // Process command line options
+  processOptions(argc, argv, outfolder, bb);
+
+  // Write parameters
+  filename = outfolder; filename += "simulation_parameters.txt";
+  bb->writeParameters(filename.c_str());
+  // Write data record file.
+  filename = outfolder; filename += "sim_record.py";
+  bb->writeSimRecord_dt(filename.c_str());
+  // Open data file
+  filename = outfolder; filename += "simulation.dat";
+  ofstream OutputFile(filename.c_str(), ios::binary);
 
   // Write initial conditions
   OutputFile << bb;
@@ -32,11 +45,11 @@ int main(int argc, char ** argv)
   delete bb;
   OutputFile.close();
   cout << "Simulation completed.  Simulation output written to "
-       << filename<< endl;
+       << outfolder << endl;
   return 0;
 } // main
 
-void processOptions(int argc, char ** argv, char * filename, Whipple * bike)
+void processOptions(int argc, char ** argv, char * outfolder, Whipple * bike)
 {
   int c, option_index;
   bool verbose_flag = false;
@@ -96,13 +109,9 @@ void processOptions(int argc, char ** argv, char * filename, Whipple * bike)
       bike->calcPitch();
       bike->eoms();
       bike->computeOutputs();
-    } else if (c == 'o') {
-      strcpy(bike->outfolder, optarg);
-      strcpy(filename, optarg);
-      strcat(filename, "simulation.dat");
-      cout << "filename = " << filename << endl;
-      bike->writeRecord_dt();
-    } else if (c == 's') {
+    } else if (c == 'o')
+      strcpy(outfolder, optarg);
+    else if (c == 's') {
       double * state = new double[10];
       readState(state, optarg);
       bike->setState(state);

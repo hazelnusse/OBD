@@ -15,7 +15,7 @@
 #define GSLVECUTILS_H
 
 #include "gslVecUtils.h"
-#include <math.h>
+#include <cmath>
 
 gsl_vector * linspaceN(double start, double stop, int N)
 {

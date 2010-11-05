@@ -5,7 +5,7 @@
 
 // Structor to store the options
 typedef struct {
-  char filename[512];
+  char outfolder[512];
   int N;
   double vi, vf;
 } evalOptions;
@@ -16,13 +16,26 @@ void processOptions(int argc, char ** argv, evalOptions * opt , Whipple * bike);
 int main(int argc, char ** argv)
 {
   Whipple * bb = new Whipple();
-  evalOptions * opt = new evalOptions;
-  strcpy(opt->filename, "eigenvalues.dat");     // default file name
-  opt->N = 201; opt->vi = 0.0; opt->vf = 10.0;  // default parameters
+  string filename;
 
-  processOptions(argc, argv, opt, bb);
-  ofstream OutputFile(opt->filename, ios::binary);
+  evalOptions * opt = new evalOptions;
+  // default parameters
+  strcpy(opt->outfolder, "./");
+  opt->N = 201; opt->vi = 0.0; opt->vf = 10.0;
   
+  // Process command line options
+  processOptions(argc, argv, opt, bb);
+
+  // Write parameters
+  filename = opt->outfolder; filename += "eigenvalue_parameters.txt";
+  bb->writeParameters(filename.c_str());
+  // Write data record file.
+  filename = opt->outfolder; filename += "eval_record.py";
+  bb->writeEvalRecord_dt(filename.c_str());
+  // Open data file
+  filename = opt->outfolder; filename += "eigenvalues.dat";
+  ofstream OutputFile(filename.c_str(), ios::binary);
+
   // Vector to store range of speeds to calculate eigenvalues
   gsl_vector * speed = linspaceN(opt->vi, opt->vf, opt->N);
 
@@ -37,8 +50,9 @@ int main(int argc, char ** argv)
     OutputFile.write((char *) &speed->data[i], sizeof(double));
     OutputFile.write((char *) bb->fourValues, 4*sizeof(double));
   } // for i
+  cout << "Eigenvalue data written to " << opt->outfolder << endl;
 
-  cout << "Eigenvalue data written to " << opt->filename << "." << endl;
+  // Close files and free memory
   OutputFile.close();
   delete bb;
   delete opt;
@@ -108,7 +122,7 @@ void processOptions(int argc, char ** argv, evalOptions * opt, Whipple * bike)
     else if (c == 'f')
       opt->vf = atof(optarg);
     else if (c == 'o')
-      strcpy(opt->filename, optarg);
+      strcpy(opt->outfolder, optarg);
     else {
       cout << "Invalid option." << endl;
       abort();

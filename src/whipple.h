@@ -3,7 +3,7 @@
 
 #include <iostream>
 #include <fstream>
-#include <string.h>
+#include <cstring>
 #include <cmath>
 #include <gsl/gsl_errno.h>
 #include <gsl/gsl_odeiv.h>
@@ -81,9 +81,6 @@ class Whipple {
     gsl_eigen_nonsymmv_workspace * w;
     double fourValues[4];
 
-    // Variables for data output
-    char outfolder[512];
-
     // Member functions
     Whipple();
     ~Whipple();
@@ -105,7 +102,10 @@ class Whipple {
     void setState(const double state[10]);
 
     // Accessors
-    void writeRecord_dt(void) const;
+    void writeEvalRecord_dt(const char * filename) const;
+    void writeSimRecord_dt(const char * filename) const;
+    void writeParameters(const char * filename) const;
+    void writeState(const char * filename) const;
     void printState(void) const;
     void printParameters(void) const;
 

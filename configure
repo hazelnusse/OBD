@@ -557,7 +557,7 @@ PACKAGE_STRING='Open Bicycle Dynamics 0.1'
 PACKAGE_BUGREPORT='hazelnusse@gmail.com'
 PACKAGE_URL=''
 
-ac_unique_file="src/gslVecUtils.cpp"
+ac_unique_file="src/whipple.cpp"
 # Factoring default headers for most tests.
 ac_includes_default="\
 #include <stdio.h>
@@ -3745,18 +3745,6 @@ fi
 done
 
 
-for ac_header in string.h
-do :
-  ac_fn_c_check_header_mongrel "$LINENO" "string.h" "ac_cv_header_string_h" "$ac_includes_default"
-if test "x$ac_cv_header_string_h" = x""yes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_STRING_H 1
-_ACEOF
-
-fi
-
-done
-
 for ac_header in getopt.h
 do :
   ac_fn_c_check_header_mongrel "$LINENO" "getopt.h" "ac_cv_header_getopt_h" "$ac_includes_default"
@@ -3938,8 +3926,11 @@ fi
 done
 
 
+# Process Makefile.in and src/Makefile.in
 ac_config_files="$ac_config_files Makefile src/Makefile"
 
+
+# Generate configure script
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
 # tests run on this system so they can be shared between configure

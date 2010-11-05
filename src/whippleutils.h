@@ -1,16 +1,9 @@
 #ifndef WHIPPLEUTILS_H
 #define WHIPPLEUTILS_H
 
-//#include <gsl/gsl_vector.h>
-//#include <gsl/gsl_matrix.h>
-//#include <gsl/gsl_errno.h>
-//#include <gsl/gsl_eigen.h>
-#include <gsl/gsl_odeiv.h>
 #include <fstream>
-
-//#include <math.h>
-#include <string.h>
-//#include <getopt.h>
+#include <cstring>
+#include <gsl/gsl_odeiv.h>
 #include "whipple.h"
 
 // Convert Meijaard Bike Parameters to my model parameters
