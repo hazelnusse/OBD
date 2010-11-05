@@ -117,8 +117,6 @@ void Whipple::writeSimRecord_dt(const char * filename) const
           "                   ('nh2', np.float64)," << endl <<
           "                   ('nh3', np.float64)])" << endl;
     fp.close();
-    cout << "Output simulation data record definition file written to "
-         << filename << endl;
   } else {
     cerr << "Unable to open " << filename << "for writing." << endl;
     cerr << "Aborting." << endl;
@@ -137,8 +135,6 @@ void Whipple::writeEvalRecord_dt(const char * filename) const
           "                    ('lambda3', np.float64)," << endl <<
           "                    ('lambda4', np.float64)])" << endl;
     fp.close();
-    cout << "Output eigenvalue data record definition file written to "
-         << filename << endl;
   } else {
     cerr << "Unable to open " << filename << "for writing." << endl;
     cerr << "Aborting." << endl;

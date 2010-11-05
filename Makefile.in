@@ -18,11 +18,17 @@ VPATH			= @srcdir@
 all clean check install uninstall whippleeig whipplesim:
 	cd src && $(MAKE) $@
 
-dist: $(distdir).tar.bz2
+dist: $(distdir).tar.bz2 $(distdir).tar.gz $(distdir).tar.xz
+	rm -rf $(distdir)
 
 $(distdir).tar.bz2: $(distdir)
 	tar cjf $@ $(distdir)
-	rm -rf $(distdir)
+
+$(distdir).tar.gz: $(distdir)
+	tar czf $@ $(distdir)
+
+$(distdir).tar.xz: $(distdir)
+	tar cJf $@ $(distdir)
 
 $(distdir): FORCE
 	mkdir -p $(distdir)/src
@@ -32,6 +38,11 @@ $(distdir): FORCE
 	cp src/Makefile.in $(distdir)/src
 	cp src/*.cpp $(distdir)/src
 	cp src/*.h $(distdir)/src
+	cp plot.py $(distdir)
+	cp plotfunctions.py $(distdir)
+	cp README $(distdir)
+	cp LICENSE $(distdir)
+	cp NEWS $(distdir)
 
 FORCE:
 	rm -rf $(distdir).tar.bz2
@@ -44,17 +55,19 @@ distcheck: $(distdir).tar.bz2
 	cd $(distdir) && $(MAKE) check
 	cd $(distdir) && $(MAKE) DESTDIR=$${PWD}/_inst install
 	cd $(distdir) && $(MAKE) DESTDIR=$${PWD}/_inst uninstall
-	@remaining="`find $${PWD}/$(distdir)/_inst -type f | wc -l~"; \
+	@remaining="`find $${PWD}/$(distdir)/_inst -type f | wc -l`"; \
 	if test "$${remaining}" -ne 0; then \
 	  echo "*** $${remaining} file(s) remaining in stage directory!"; \
-	  exit 1;
+	  exit 1; \
 	fi
 	cd $(distdir) && $(MAKE) clean
 	rm -rf $(distdir)
-	@printf "*** Package $(distdir).tar.bz2 is ready for distribution."
+	@echo "*** Package $(distdir).tar.bz2 is ready for distribution."
 
 distclean:
 	rm -rf $(distdir).tar.bz2
+	rm -rf $(distdir).tar.gz
+	rm -rf $(distdir).tar.xz
 
 Makefile: Makefile.in config.status
 	./config.status $@

@@ -28,19 +28,20 @@ Makefile: Makefile.in ../config.status
 ../config.status: ../configure
 	cd .. && ./config.status --recheck
 
-
 check: all
-	./whipplesim | grep "Simulation completed.  Simulation output written to ./simulation.dat"
-	@printf "*** Simulation test passed ***"
-	./whippleeig | grep "Eigenvalue data written to eigenvalues.dat."
-	@printf "*** Eigenvalue test passed ***"
+	./whipplesim | grep "Simulation completed.  Simulation output written to ./"
+	@echo "*** Simulation test passed ***"
+	./whippleeig | grep "Eigenvalue data written to ./"
+	@echo "*** Eigenvalue test passed ***"
 
 install: 
 	install -d $(DESTDIR)$(bindir)
-	install -m 0755 sdsim $(DESTDIR)$(bindir)
+	install -m 0755 whippleeig $(DESTDIR)$(bindir)
+	install -m 0755 whipplesim $(DESTDIR)$(bindir)
 
 uninstall:
-	rm -rf $(DESTDIR)$(bindir)/sdsim
+	rm -rf $(DESTDIR)$(bindir)/whippleeig
+	rm -rf $(DESTDIR)$(bindir)/whipplesim
 
 whipplesim: whipple.o whipple_al.o whippleutils.o whipplesim.o 
 	$(CXX) -Wall -o $@ -lm -lgsl -lcblas -latlas $^

@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.67])
-AC_INIT([Open Bicycle Dynamics], [0.1], [hazelnusse@gmail.com])
+AC_INIT([Open Bicycle Dynamics], [0.01], [hazelnusse@gmail.com])
 AC_CONFIG_SRCDIR([src/whipple.cpp])
 
 # Checks for programs.
