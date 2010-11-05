@@ -18,17 +18,20 @@ VPATH			= @srcdir@
 all clean check install uninstall whippleeig whipplesim:
 	cd src && $(MAKE) $@
 
-dist: $(distdir).tar.bz2 $(distdir).tar.gz $(distdir).tar.xz
+dist: $(distdir).tar.bz2 $(distdir).tar.gz $(distdir).tar.xz $(distdir).zip
 	rm -rf $(distdir)
-
-$(distdir).tar.bz2: $(distdir)
-	tar cjf $@ $(distdir)
 
 $(distdir).tar.gz: $(distdir)
 	tar czf $@ $(distdir)
 
+$(distdir).tar.bz2: $(distdir)
+	tar cjf $@ $(distdir)
+
 $(distdir).tar.xz: $(distdir)
 	tar cJf $@ $(distdir)
+
+$(distdir).zip: $(distdir)
+	zip -r $@ $(distdir)
 
 $(distdir): FORCE
 	mkdir -p $(distdir)/src
