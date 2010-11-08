@@ -4,7 +4,7 @@
 AC_PREREQ([2.67])
 AC_INIT([Open Bicycle Dynamics], [0.01], [hazelnusse@gmail.com])
 AM_INIT_AUTOMAKE
-AM_PATH_PYTHON
+AM_PATH_PYTHON([2.6])
 AC_CONFIG_SRCDIR([whipple/whippleeig.cpp])
 
 # Checks for programs.
@@ -12,7 +12,7 @@ AC_PROG_CXX
 AC_PROG_CC
 AC_PROG_INSTALL
 AC_PROG_RANLIB
-AC_PROG_CC_C_O
+#AC_PROG_CC_C_O
 
 # Check for libraries
 AC_CHECK_LIB([m],[cos])
