@@ -3,11 +3,16 @@
 
 AC_PREREQ([2.67])
 AC_INIT([Open Bicycle Dynamics], [0.01], [hazelnusse@gmail.com])
-AC_CONFIG_SRCDIR([src/whipple.cpp])
+AM_INIT_AUTOMAKE
+AM_PATH_PYTHON
+AC_CONFIG_SRCDIR([whipple/whippleeig.cpp])
 
 # Checks for programs.
 AC_PROG_CXX
 AC_PROG_CC
+AC_PROG_INSTALL
+AC_PROG_RANLIB
+AC_PROG_CC_C_O
 
 # Check for libraries
 AC_CHECK_LIB([m],[cos])
@@ -24,8 +29,10 @@ AC_C_INLINE
 # Checks for library functions.
 AC_CHECK_FUNCS([floor pow sqrt])
 
-# Process Makefile.in and src/Makefile.in
-AC_CONFIG_FILES([Makefile src/Makefile])
+# All files that will be generated from templates
+AC_CONFIG_FILES([Makefile
+                 whipple/common/Makefile
+                 whipple/Makefile])
 
 # Generate configure script
 AC_OUTPUT

@@ -2,15 +2,15 @@
 import numpy as np
 import os
 
+#TODO Need to fix all occurances of './' and '/' so that everything runs under
+# cygwin.
 # Folder to store all simulation input and output for each run
-outfolder = "./results/"
+outfolder = "results/"
 
-# Parameter files: TODO change where these are located
-pfiles = ['benchmark_params.txt',
-          'awkwark_front_fork.txt',
-          'BatavusBrowserPar.txt',
-          'test_params.txt']
-parameters = "../parameters/" + pfiles[0]
+# Parameter files:
+pfiles = ['benchmark.txt',
+          'benchmark_toroidal.txt']
+parameters = "bikeparameters/" + pfiles[0]
 
 # TODO add this information to a text file of some sort that is stored along
 # with the eigenvalue output data
@@ -19,7 +19,7 @@ vi = 0.0
 vf = 20.0
 N = 300
 
-os.system('./src/whippleeig ' +
+os.system('whippleeig ' +
           ' -m ' + parameters +
           ' -i ' + str(vi) +
           ' -f ' + str(vf) +
@@ -28,17 +28,15 @@ os.system('./src/whippleeig ' +
 
 # options for simulation generation
 sfiles = ['benchmark_ic.txt',
-          'basumandal_states.txt',
-          'test.txt',
-          'upright.txt',
-          'uprightsteady_4.6.txt']
-initial_state = '../state/' + sfiles[0]
+          'upright_static.txt',
+          'test.txt']
+ic = 'initialconditions/' + sfiles[0]
 tf = 5.0
 fps = 60.0
 
-os.system('./src/whipplesim' +
+os.system('whipplesim' +
           ' -m ' + parameters +
-          ' -s ' + initial_state +
+          ' -s ' + ic +
           ' -t ' + str(tf) +
           ' -f ' + str(fps) +
           ' -o ' + outfolder)
@@ -46,7 +44,7 @@ os.system('./src/whipplesim' +
 # Copy the parameters and initial state that were used as inputs to the
 # eigenanalysis / simulation
 os.system("cp " + parameters + " " + outfolder + "bike_parameters.txt")
-os.system("cp " + initial_state + " " + outfolder + "initial_conditions.txt")
+os.system("cp " + ic + " " + outfolder + "initial_conditions.txt")
 os.system("cp plotfunctions.py " + outfolder)
 
 # Code that is packaged along with data so that people can regenerate the
@@ -59,7 +57,7 @@ from sim_record import sim_dt
 from eval_record import eval_dt
 
 # Get the data from file and put into a custom data type -- examine
-# ./record.py for details on all the data fields.
+# sim_record.py, eval_record.py for details on data fields.
 sim_data = np.fromfile("simulation.dat", dtype=sim_dt)
 eval_data = np.fromfile("eigenvalues.dat", dtype=eval_dt)
 
@@ -72,10 +70,10 @@ plot_dict = {'evals': True,
              'constraints': True}
 
 # Make the plots and save them to file
-pf.makeplots(plot_dict, eval_data, sim_data, folder='')
+pf.makeplots(plot_dict, eval_data, sim_data, folder="")
 
 # Display the plots on screen
-# plt.show()
+plt.show()
 """
 
 fp = open(outfolder + "plotter.py", "w")
