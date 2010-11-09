@@ -9,15 +9,16 @@ outfolder = "results/"
 
 # Parameter files:
 pfiles = ['benchmark.txt',
-          'benchmark_toroidal.txt']
+          'benchmark_toroidal.txt',
+          'test.txt']
 parameters = "bikeparameters/" + pfiles[0]
 
 # TODO add this information to a text file of some sort that is stored along
 # with the eigenvalue output data
 # options for eigenvalue generation
 vi = 0.0
-vf = 20.0
-N = 300
+vf = 10.0
+N = 301
 
 os.system('whippleeig ' +
           ' -m ' + parameters +
@@ -70,7 +71,11 @@ plot_dict = {'evals': True,
              'constraints': True}
 
 # Make the plots and save them to file
-pf.makeplots(plot_dict, eval_data, sim_data, folder="")
+pf.plotcontroller(plot_dict,
+                  sim_data,
+                  [eval_data],
+                  steady_turning_data=None,
+                  folder="")
 
 # Display the plots on screen
 plt.show()

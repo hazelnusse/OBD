@@ -1,12 +1,16 @@
 import matplotlib.pyplot as plt
 
-def plotevals(d, folder):
+def plotevals(data, folder):
     plt.figure()
-    plt.plot(d[:]['v'], d[:]['lambda1'], 'k,')
-    plt.plot(d[:]['v'], d[:]['lambda2'], 'k,')
-    plt.plot(d[:]['v'], d[:]['lambda3'], 'k,')
-    plt.plot(d[:]['v'], d[:]['lambda4'], 'k,')
+    for d in data:
+        plt.plot(d[:]['v'], d[:]['lambda1'], 'k,')
+        plt.plot(d[:]['v'], d[:]['lambda2'], 'k,')
+        plt.plot(d[:]['v'], d[:]['lambda3'], 'k,')
+        plt.plot(d[:]['v'], d[:]['lambda4'], 'k,')
+    # Presumably, all eigenvalues are calculated over same speed range
     plt.axis([min(d[:]['v']), max(d[:]['v']), -10, 10])
+    plt.xlabel('Speed [m/s]')
+    plt.grid(True)
     plt.savefig(folder + 'evals.pdf')
 
 def plotorientation(d, folder):
@@ -98,9 +102,7 @@ def plotconstraints(d, folder):
     f3a5.axes.set_xlabel('seconds')
     plt.savefig(folder + 'constraints.pdf')
 
-def makeplots(plot_dict, eval_data, sim_data, folder):
-    if plot_dict['evals']:
-        plotevals(eval_data, folder)
+def timeseriesplots(plot_dict, sim_data, folder):
     if plot_dict['orientation']:
         plotorientation(sim_data, folder)
     if plot_dict['contact']:
@@ -111,3 +113,16 @@ def makeplots(plot_dict, eval_data, sim_data, folder):
         plotconstraintforces(sim_data, folder)
     if plot_dict['constraints']:
         plotconstraints(sim_data, folder)
+
+def plotcontroller(plot_dict,
+                   sim_data=None,
+                   eval_data=None,
+                   steady_turning_data=None,
+                   folder=None):
+
+    if folder == None:
+        folder = ""
+    if sim_data != None:
+        timeseriesplots(plot_dict, sim_data, folder)
+    if eval_data != None and plot_dict['evals']:
+        plotevals(eval_data, folder)
