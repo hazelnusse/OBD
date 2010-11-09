@@ -1,6 +1,3 @@
-#                                               -*- Autoconf -*-
-# Process this file with autoconf to produce a configure script.
-
 AC_PREREQ([2.67])
 AC_INIT([Open Bicycle Dynamics], [0.01], [hazelnusse@gmail.com])
 AM_INIT_AUTOMAKE
@@ -12,7 +9,6 @@ AC_PROG_CXX
 AC_PROG_CC
 AC_PROG_INSTALL
 AC_PROG_RANLIB
-#AC_PROG_CC_C_O
 
 # Check for libraries
 AC_CHECK_LIB([m],[cos])
