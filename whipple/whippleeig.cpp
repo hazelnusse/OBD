@@ -59,7 +59,6 @@ int main(int argc, char ** argv)
 
   bb->u1 = 0.0;
   bb->u3 = 0.0;
-  bb->rrt = bb->rft = 0.00;
   bb->evalConstants();
 
   for (int i = 0; i < opt->N; ++i) {
@@ -117,6 +116,7 @@ void processOptions(int argc, char ** argv, evalOptions * opt, Whipple * bike)
       readMJWhippleParams(mjbike, optarg);
       convertParameters(b, mjbike);
       bike->setParameters(b);
+      bike->evalConstants();
       bike->eoms();
       bike->computeOutputs();
       delete mjbike;
@@ -125,6 +125,7 @@ void processOptions(int argc, char ** argv, evalOptions * opt, Whipple * bike)
       WhippleParams * b = new WhippleParams;
       readWhippleParams(b, optarg);
       bike->setParameters(b);
+      bike->evalConstants();
       bike->eoms();
       bike->computeOutputs();
       delete b;
