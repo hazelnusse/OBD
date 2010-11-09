@@ -68,6 +68,7 @@ void setBenchmarkParameters(MJWhippleParams * bike)
   bike->rrt =  0.0;
   bike->rft =  0.0;
   bike->rr = 0.3;
+  bike->rf = 0.35;
   bike->mr = 2.0;
   bike->IRxx = 0.0603;
   bike->IRyy = 0.12;
@@ -85,7 +86,6 @@ void setBenchmarkParameters(MJWhippleParams * bike)
   bike->IHyy = 0.06;
   bike->IHzz = 0.00708;
   bike->IHxz = -0.00756;
-  bike->rf = 0.35;
   bike->mf = 3.0;
   bike->IFxx = 0.1405;
   bike->IFyy = 0.28;

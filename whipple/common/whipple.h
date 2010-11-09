@@ -29,6 +29,7 @@
 #include <gsl/gsl_eigen.h>
 
 #define Z_MAX 987
+#define ZS_MAX 659
 
 using namespace std;
 
@@ -99,6 +100,14 @@ class Whipple {
     gsl_eigen_nonsymmv_workspace * w;
     double fourValues[4];
 
+    // Variables associated with steady turning
+    double z_s[ZS_MAX];
+    // Coefficient of friction required for front and rear wheels
+    double mew_f, mew_r;
+    // These attributes are set when RigidRiderSteady is called
+    double u5s_s, Ts_s, Ry_s, Rz_s, Fy_s, Fz_s;
+    double F[11], dF[36];
+
     // Member functions
     Whipple();
     ~Whipple();
@@ -118,6 +127,9 @@ class Whipple {
     void setBenchmarkState(void);
     void setParameters(WhippleParams * p);
     void setState(const double state[10]);
+
+    // Steady turning related functions
+    void steadyEqns(void);
 
     // Accessors
     void writeEvalRecord_dt(const char * filename) const;
