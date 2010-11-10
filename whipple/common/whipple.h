@@ -29,7 +29,7 @@
 #include <gsl/gsl_eigen.h>
 
 #define Z_MAX 987
-#define ZS_MAX 659
+#define ZS_MAX 652
 
 using namespace std;
 
@@ -40,6 +40,7 @@ extern "C" {
 // structure use to store command line options passed to steady turning code
 typedef struct {
   char outfolder[512];// output folder name
+  size_t N;           // # of points to mesh steer in [0, pi] 
   bool all;           // controls whether to mesh whole feasible region
   gsl_vector * iso_v, * iso_t, * iso_mew;
 } steadyOpts_t;
@@ -137,8 +138,7 @@ class Whipple {
 
     // Steady turning related functions
     void steadyEqns(void);
-    void steadyBoundaries(steadyOpts_t * options);
-    //friend int staticEq(gsl_vector * lean, gsl_vector * pitch , const gsl_vector * steer, Whipple * bike);
+    void steadyCalcs(steadyOpts_t * options);
 
     // Accessors
     void writeEvalRecord_dt(const char * filename) const;

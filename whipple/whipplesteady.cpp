@@ -31,13 +31,14 @@ int main(int argc, char ** argv)
   // set default options
   options->outfolder[0] = '\0'; // Put results in current directory
   options->all = false;         // Only calculate boundary curves by default
+  options->N = 1001;            // # of points to mesh steer in [0, pi]
   options->iso_v = options->iso_t = options->iso_mew = NULL;
   
   // Process command line options
   processOptions(argc, argv, options, bb);
 
   // Step one, always performed for all steady turning analysis:
-  bb->steadyBoundaries(options);   // generate boundary curves, write to file
+  bb->steadyCalcs(options);   // generate boundary curves, write to file
 
   //if (options->all)         // generate all quantities within feasible region
   //  bb->steadyMesh(options);
@@ -65,6 +66,7 @@ void processOptions(int argc, char ** argv, steadyOpts_t * options, Whipple * bi
     static struct option long_options[] = {
       {"help",          no_argument,       0, 'h'},
       {"all",           no_argument,       0, 'a'},
+      {"steerpoints",   required_argument, 0, 'N'},
       {"iso_s",         required_argument, 0, 's'},
       {"iso_t",         required_argument, 0, 't'},
       {"iso_mew",       required_argument, 0, 'f'},
@@ -74,7 +76,7 @@ void processOptions(int argc, char ** argv, steadyOpts_t * options, Whipple * bi
       {"verbose",       no_argument,       0, 'v'},
       {0, 0, 0, 0}};
 
-    c = getopt_long(argc, argv, "ha:s:t:f:m:p:o:v", long_options, &option_index);
+    c = getopt_long(argc, argv, "ha:N:s:t:f:m:p:o:v", long_options, &option_index);
 
     if (c == -1) //Detect the end of the options.
       break;
@@ -86,6 +88,7 @@ void processOptions(int argc, char ** argv, steadyOpts_t * options, Whipple * bi
 "  -h, --help                     display this help and exit\n"
 "  -m, --mjparams=pfile           Meijaard bike parameters\n"
 "  -p, --params=pfile             native bike model parameters\n"
+"  -N, --steerpoints=N            number of points to mesh steer into\n"
 "  -a, --all                      all feasible steady turning quantities\n"
 "  -v, --iso_v=1,2,3,...          specify velocity level curves\n"
 "  -t, --iso_t=1,2,3,...          specify torque level curves\n"
@@ -114,9 +117,11 @@ void processOptions(int argc, char ** argv, steadyOpts_t * options, Whipple * bi
       bike->computeOutputs();
       bike->steadyEqns();
       delete b;
-    } else if (c == 'a') {
-
-    } else if (c == 'o')
+    } else if (c == 'a')
+      options->all = true;
+    else if (c == 'N')
+      options->N = atoi(optarg);
+    else if (c == 'o')
       strcpy(options->outfolder, optarg);
     else if (c == 't')  // torque level curves specified
       cout << "Not implemented yet.";
