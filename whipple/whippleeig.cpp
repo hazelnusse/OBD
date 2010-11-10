@@ -24,7 +24,7 @@
 // Structor to store the options
 typedef struct {
   char outfolder[512];
-  int N;
+  size_t N;
   double vi, vf;
 } evalOptions;
 

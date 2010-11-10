@@ -101,43 +101,43 @@ void Whipple::writeSimRecord_dt(const char * filename) const
 {
   ofstream fp(filename, ios::out);
   if (fp.is_open()) {
-    fp << "import numpy as np" << endl;
-    fp << "sim_dt = np.dtype([('t', np.float64)," << endl <<
-          "                   ('q0', np.float64)," << endl <<
-          "                   ('q1', np.float64)," << endl <<
-          "                   ('q2', np.float64)," << endl <<
-          "                   ('q3', np.float64)," << endl <<
-          "                   ('q4', np.float64)," << endl <<
-          "                   ('q5', np.float64)," << endl <<
-          "                   ('q6', np.float64)," << endl <<
-          "                   ('q7', np.float64)," << endl <<
-          "                   ('u0', np.float64)," << endl <<
-          "                   ('u1', np.float64)," << endl <<
-          "                   ('u2', np.float64)," << endl <<
-          "                   ('u3', np.float64)," << endl <<
-          "                   ('u4', np.float64)," << endl <<
-          "                   ('u5', np.float64)," << endl <<
-          "                   ('fnx', np.float64)," << endl <<
-          "                   ('fny', np.float64)," << endl <<
-          "                   ('fnz', np.float64)," << endl <<
-          "                   ('Rx', np.float64)," << endl <<
-          "                   ('Ry', np.float64)," << endl <<
-          "                   ('Rz', np.float64)," << endl <<
-          "                   ('Fx', np.float64)," << endl <<
-          "                   ('Fy', np.float64)," << endl <<
-          "                   ('Fz', np.float64)," << endl <<
-          "                   ('ke', np.float64)," << endl <<
-          "                   ('pe', np.float64)," << endl <<
-          "                   ('fa_yaw', np.float64)," << endl <<
-          "                   ('fa_lean', np.float64)," << endl <<
-          "                   ('fa_pitch', np.float64)," << endl <<
-          "                   ('nh1', np.float64)," << endl <<
-          "                   ('nh2', np.float64)," << endl <<
-          "                   ('nh3', np.float64)])" << endl;
+    fp << "import numpy as np\n";
+    fp << "sim_dt = np.dtype([('t', np.float64),\n"
+          "                   ('q0', np.float64),\n"
+          "                   ('q1', np.float64),\n"
+          "                   ('q2', np.float64),\n"
+          "                   ('q3', np.float64),\n"
+          "                   ('q4', np.float64),\n"
+          "                   ('q5', np.float64),\n"
+          "                   ('q6', np.float64),\n"
+          "                   ('q7', np.float64),\n"
+          "                   ('u0', np.float64),\n"
+          "                   ('u1', np.float64),\n"
+          "                   ('u2', np.float64),\n"
+          "                   ('u3', np.float64),\n"
+          "                   ('u4', np.float64),\n"
+          "                   ('u5', np.float64),\n"
+          "                   ('fnx', np.float64),\n"
+          "                   ('fny', np.float64),\n"
+          "                   ('fnz', np.float64),\n"
+          "                   ('Rx', np.float64),\n"
+          "                   ('Ry', np.float64),\n"
+          "                   ('Rz', np.float64),\n"
+          "                   ('Fx', np.float64),\n"
+          "                   ('Fy', np.float64),\n"
+          "                   ('Fz', np.float64),\n"
+          "                   ('ke', np.float64),\n"
+          "                   ('pe', np.float64),\n"
+          "                   ('fa_yaw', np.float64),\n"
+          "                   ('fa_lean', np.float64),\n"
+          "                   ('fa_pitch', np.float64),\n"
+          "                   ('nh1', np.float64),\n"
+          "                   ('nh2', np.float64),\n"
+          "                   ('nh3', np.float64)])";
     fp.close();
   } else {
-    cerr << "Unable to open " << filename << "for writing." << endl;
-    cerr << "Aborting." << endl;
+    cerr << "Unable to open " << filename << "for writing.\n";
+    cerr << "Aborting.\n";
     exit(0);
   }
 } // writeSimRecord_dt()
@@ -146,16 +146,16 @@ void Whipple::writeEvalRecord_dt(const char * filename) const
 {
   ofstream fp(filename, ios::out);
   if (fp.is_open()) {
-    fp << "import numpy as np" << endl;
-    fp << "eval_dt = np.dtype([('v', np.float64)," << endl <<
-          "                    ('lambda1', np.float64)," << endl <<
-          "                    ('lambda2', np.float64)," << endl <<
-          "                    ('lambda3', np.float64)," << endl <<
-          "                    ('lambda4', np.float64)])" << endl;
+    fp << "import numpy as np\n";
+    fp << "eval_dt = np.dtype([('v', np.float64),\n"
+          "                    ('lambda1', np.float64),\n"
+          "                    ('lambda2', np.float64),\n"
+          "                    ('lambda3', np.float64),\n"
+          "                    ('lambda4', np.float64)])\n";
     fp.close();
   } else {
-    cerr << "Unable to open " << filename << "for writing." << endl;
-    cerr << "Aborting." << endl;
+    cerr << "Unable to open " << filename << "for writing.\n";
+    cerr << "Aborting.\n";
     exit(0);
   }
 } // writeEvalRecord_dt()
@@ -163,49 +163,49 @@ void Whipple::writeEvalRecord_dt(const char * filename) const
 void Whipple::printState(void) const
 {
   cout.precision(16);
-  cout << "q0 = " << q0 << " (ignorable)" << endl
-       << "q1 = " << q1 << endl
-       << "q2 = " << q2 << " (dependent)" << endl
-       << "q3 = " << q3 << endl
-       << "q4 = " << q4 << " (ignorable)" << endl
-       << "q5 = " << q5 << " (ignorable)" << endl
-       << "q6 = " << q6 << " (ignorable)" << endl
-       << "q7 = " << q7 << " (ignorable)" << endl
-       << "u0 = " << u0 << " (dependent)" << endl
-       << "u1 = " << u1 << endl
-       << "u2 = " << u2 << " (dependent)" << endl
+  cout << "q0 = " << q0 << " (ignorable)\n"
+       << "q1 = " << q1 << '\n'
+       << "q2 = " << q2 << " (dependent)\n"
+       << "q3 = " << q3 << '\n'
+       << "q4 = " << q4 << " (ignorable)\n"
+       << "q5 = " << q5 << " (ignorable)\n"
+       << "q6 = " << q6 << " (ignorable)\n"
+       << "q7 = " << q7 << " (ignorable)\n"
+       << "u0 = " << u0 << " (dependent)\n"
+       << "u1 = " << u1 << '\n'
+       << "u2 = " << u2 << " (dependent)\n"
        << "u3 = " << u3 << endl
-       << "u4 = " << u4 << " (dependent)" << endl
+       << "u4 = " << u4 << " (dependent)\n"
        << "u5 = " << u5 << endl;
 } // printState()
 
 void Whipple::printParameters(void) const
 {
   cout.precision(16);
-  cout << "rr   = " << rr << endl
-       << "rrt  = " << rrt << endl
-       << "rf   = " << rf << endl
-       << "rft  = " << rft << endl
-       << "lr   = " << lr << endl
-       << "ls   = " << ls << endl
-       << "lf   = " << lf << endl
-       << "mr   = " << mr << endl
-       << "mf   = " << mf << endl
-       << "ICyy = " << ICyy << endl
-       << "IDxx = " << IDxx << endl
-       << "IDyy = " << IDyy << endl
-       << "IDzz = " << IDzz << endl
-       << "IDxz = " << IDxz << endl
-       << "IExx = " << IExx << endl
-       << "IEyy = " << IEyy << endl
-       << "IEzz = " << IEzz << endl
-       << "IExz = " << IExz << endl
-       << "IFyy = " << IFyy << endl
-       << "lrx  = " << lrx << endl
-       << "lrz  = " << lrz << endl
-       << "lfx  = " << lfx << endl
-       << "lfz  = " << lfz << endl
-       << "g    = " << g << endl;
+  cout << "rr   = " << rr
+       << "\nrrt  = " << rrt
+       << "\nrf   = " << rf
+       << "\nrft  = " << rft
+       << "\nlr   = " << lr
+       << "\nls   = " << ls
+       << "\nlf   = " << lf
+       << "\nmr   = " << mr
+       << "\nmf   = " << mf
+       << "\nICyy = " << ICyy
+       << "\nIDxx = " << IDxx
+       << "\nIDyy = " << IDyy
+       << "\nIDzz = " << IDzz
+       << "\nIDxz = " << IDxz
+       << "\nIExx = " << IExx
+       << "\nIEyy = " << IEyy
+       << "\nIEzz = " << IEzz
+       << "\nIExz = " << IExz
+       << "\nIFyy = " << IFyy
+       << "\nlrx  = " << lrx
+       << "\nlrz  = " << lrz
+       << "\nlfx  = " << lfx
+       << "\nlfz  = " << lfz
+       << "\ng    = " << g << '\n';
 } // printParameters()
 
 void Whipple::writeState(const char * filename) const

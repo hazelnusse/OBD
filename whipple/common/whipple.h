@@ -37,6 +37,13 @@ extern "C" {
   inline int eomwrapper(double t, const double x[10], double f[10], void * params);
 }
 
+// structure use to store command line options passed to steady turning code
+typedef struct {
+  char outfolder[512];// output folder name
+  bool all;           // controls whether to mesh whole feasible region
+  gsl_vector * iso_v, * iso_t, * iso_mew;
+} steadyOpts_t;
+
 // Constant parameters used in the model derivation
 typedef struct {
   double ICyy,IDxx,IDxz,IDyy,IDzz,IExx,IExz,IEyy,IEzz,IFyy;
@@ -130,6 +137,8 @@ class Whipple {
 
     // Steady turning related functions
     void steadyEqns(void);
+    void steadyBoundaries(steadyOpts_t * options);
+    //friend int staticEq(gsl_vector * lean, gsl_vector * pitch , const gsl_vector * steer, Whipple * bike);
 
     // Accessors
     void writeEvalRecord_dt(const char * filename) const;

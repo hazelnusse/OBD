@@ -19,12 +19,12 @@
 #include <gsl/gsl_vector.h>
 #include <cmath>
 
-gsl_vector * linspaceN(double start, double stop, int N);
+gsl_vector * linspaceN(double start, double stop, size_t N);
 
 gsl_vector * linspace(double start, double stop, double delta);
 
 int stable(gsl_vector_complex * evals);
 
-gsl_vector * zeros(unsigned long N);
+gsl_vector * zeros(size_t N);
 
-gsl_vector * ones(unsigned long N);
+gsl_vector * ones(size_t N);

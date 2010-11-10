@@ -21,7 +21,7 @@
 
 #include "gslVecUtils.h"
 
-gsl_vector * linspaceN(double start, double stop, int N)
+gsl_vector * linspaceN(double start, double stop, size_t N)
 {
   gsl_vector * vec;
   if (N < 1)
@@ -72,7 +72,7 @@ int stable(gsl_vector_complex * evals)
   return 1;
 } // stable()
 
-gsl_vector * zeros(unsigned long N)
+gsl_vector * zeros(size_t N)
 {
   unsigned long i;
   gsl_vector * vec = gsl_vector_alloc(N);
@@ -83,7 +83,7 @@ gsl_vector * zeros(unsigned long N)
   return vec;
 } // zeros()
 
-gsl_vector * ones(unsigned long N)
+gsl_vector * ones(size_t N)
 {
   unsigned long i;
   gsl_vector * vec = gsl_vector_alloc(N);
