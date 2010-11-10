@@ -3,11 +3,11 @@ OBD:  Open Bicycle Dynamics
 
 A C++ library for studying the bicycle.  Includes programs for:
     - numerical simulation of nonlinear equations of motion
-    - eigenvalues of linearized upright steady dynamics as function of speed
+    - eigenvalues of linearized upright zero-steer dynamics as function of speed
+    - generation of numerous level curve plots in the lean-steer plane
     - Python code to plot all results and save the data
 
-License: New BSD License (see the LICENSE file for details)
-covers all files in the sympy repository unless stated otherwise.
+License: GNU GPLv3  (see COPYING file for details)
 
 0. Download
 -----------
@@ -28,7 +28,6 @@ And then proceed with the standard configure and make process.
 
 1. Required libraries
 ---------------------
-
 To build the source, you must be able to link to the following libaries:
 
 libgsl    -- GNU Scientific Library
