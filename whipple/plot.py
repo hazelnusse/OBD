@@ -42,6 +42,11 @@ os.system('whipplesim' +
           ' -f ' + str(fps) +
           ' -o ' + outfolder)
 
+# options for steady turning plots
+os.system('whipplesteady' +
+          ' -o ' + outfolder)
+
+
 # Copy the parameters and initial state that were used as inputs to the
 # eigenanalysis / simulation
 os.system("cp " + parameters + " " + outfolder + "bike_parameters.txt")
@@ -56,11 +61,13 @@ import plotfunctions as pf
 import matplotlib.pyplot as plt
 from sim_record import sim_dt
 from eval_record import eval_dt
+from boundary_record import boundary_dt
 
 # Get the data from file and put into a custom data type -- examine
 # sim_record.py, eval_record.py for details on data fields.
 sim_data = np.fromfile("simulation.dat", dtype=sim_dt)
 eval_data = np.fromfile("eigenvalues.dat", dtype=eval_dt)
+boundary_data = np.fromfile("boundary.dat", dtype=boundary_dt)
 
 # Choose which plots to generate here
 plot_dict = {'evals': True,
@@ -68,13 +75,15 @@ plot_dict = {'evals': True,
              'contact': True,
              'energy' : True,
              'constraintforces': True,
-             'constraints': True}
+             'constraints': True,
+             'cfglim' : True,
+             'feasibleboundary' : True}
 
 # Make the plots and save them to file
 pf.plotcontroller(plot_dict,
                   sim_data,
                   [eval_data],
-                  steady_turning_data=None,
+                  steady_data=[boundary_data],
                   folder="")
 
 # Display the plots on screen

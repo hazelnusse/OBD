@@ -2,21 +2,23 @@
  * 
  * Copyright (C) 2010 Dale Lukas Peterson
  * 
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 3 of the License, or (at
- * your option) any later version.
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation; either version 3 of the License, or (at your option)
+ * any later version.
  * 
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
  * 
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ * You should have received a copy of the GNU General Public License along with
+ * this program; if not, write to the Free Software Foundation, Inc., 51
+ * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 #include "whipple.h"
+#define GSL_RANGE_CHECK_OFF
+#define HAVE_INLINE
 int eomwrapper(double t, const double x[10], double f[10], void * params)
 {
   Whipple * p = (Whipple *) params;
@@ -297,8 +299,8 @@ Whipple::Whipple()
   evecs = gsl_matrix_complex_alloc(4, 4);
   m = gsl_matrix_alloc(4, 4);
   gsl_matrix_set_zero(m);
-  m->data[2] = 1.0;
-  m->data[7] = 1.0;
+  gsl_matrix_set(m, 0, 2, 1.0);
+  gsl_matrix_set(m, 1, 3, 1.0);
   w = gsl_eigen_nonsymmv_alloc(4);
 } // constructor
 
@@ -439,23 +441,28 @@ void Whipple::calcPitch(void)
 
 void Whipple::calcEvals(void)
 {
-  m->data[0] = m->data[1] = m->data[3] = 
-    m->data[4] = m->data[5] = m->data[6] = 0.0;
-  m->data[2] = m->data[7] = 1.0;  // set the top two rows
+  gsl_matrix_set(m, 0, 0, 0.0);
+  gsl_matrix_set(m, 0, 1, 0.0);
+  gsl_matrix_set(m, 0, 3, 0.0);
+  gsl_matrix_set(m, 1, 0, 0.0);
+  gsl_matrix_set(m, 1, 1, 0.0);
+  gsl_matrix_set(m, 1, 2, 0.0);
+  gsl_matrix_set(m, 0, 2, 1.0);
+  gsl_matrix_set(m, 1, 3, 1.0);
   // Evaluate the EOMS
   eoms();
   // Evaluate the 10x10 A matrix
   computeOutputs();
 
   // Get the 4x4 sub matrix of the 10x10 A matrix
-  m->data[8] = A[71];
-  m->data[9] = A[72];
-  m->data[10] = A[77];
-  m->data[11] = A[78];
-  m->data[12] = A[81];
-  m->data[13] = A[82];
-  m->data[14] = A[87];
-  m->data[15] = A[88];
+  gsl_matrix_set(m, 2, 0, A[71]);
+  gsl_matrix_set(m, 2, 1, A[72]);
+  gsl_matrix_set(m, 2, 2, A[77]);
+  gsl_matrix_set(m, 2, 3, A[78]);
+  gsl_matrix_set(m, 3, 0, A[81]);
+  gsl_matrix_set(m, 3, 1, A[82]);
+  gsl_matrix_set(m, 3, 2, A[87]);
+  gsl_matrix_set(m, 3, 3, A[88]);
 
   // Get the eigenvalues
   gsl_eigen_nonsymmv(m, evals, evecs, w);

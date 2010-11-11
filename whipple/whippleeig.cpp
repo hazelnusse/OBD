@@ -38,7 +38,7 @@ int main(int argc, char ** argv)
 
   evalOptions * opt = new evalOptions;
   // default parameters
-  strcpy(opt->outfolder, "");
+  opt->outfolder[0] = '\0';
   opt->N = 201; opt->vi = 0.0; opt->vf = 10.0;
   
   // Process command line options
@@ -62,9 +62,9 @@ int main(int argc, char ** argv)
   bb->evalConstants();
 
   for (int i = 0; i < opt->N; ++i) {
-    bb->u5 = -speed->data[i]/(bb->rf+bb->rft);
+    bb->u5 = -gsl_vector_get(speed, i)/(bb->rf+bb->rft);
     bb->calcEvals();
-    OutputFile.write((char *) &speed->data[i], sizeof(double));
+    OutputFile.write((char *) gsl_vector_ptr(speed, i), sizeof(double));
     OutputFile.write((char *) bb->fourValues, 4*sizeof(double));
   } // for i
   cout << "Eigenvalue data written to " << opt->outfolder << endl;

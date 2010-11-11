@@ -17,48 +17,40 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 #include <iostream>
+#include <string>
 #include <getopt.h>
 #include "whippleutils.h"
 #include "whipple.h"
 
 // Forward declaration
 void processOptions(int argc, char ** argv, steadyOpts_t * options, Whipple * bike);
+void parseisoargs(gsl_vector * v, char * optarg);
 
 int main(int argc, char ** argv)
 {
   Whipple * bb = new Whipple();
-  steadyOpts_t * options = new steadyOpts_t;
+  steadyOpts_t * opt = new steadyOpts_t;
   // set default options
-  options->outfolder[0] = '\0'; // Put results in current directory
-  options->all = false;         // Only calculate boundary curves by default
-  options->N = 1001;            // # of points to mesh steer in [0, pi]
-  options->iso_v = options->iso_t = options->iso_mew = NULL;
+  opt->outfolder[0] = '\0'; // Put results in current directory
+  opt->all = false;         // Only calculate boundary curves by default
+  opt->N = 1001;            // # of points to mesh steer in [0, pi]
   
   // Process command line options
-  processOptions(argc, argv, options, bb);
+  processOptions(argc, argv, opt, bb);
 
-  // Step one, always performed for all steady turning analysis:
-  bb->steadyCalcs(options);   // generate boundary curves, write to file
+  // Make all the calculations requested
+  bb->steadyCalcs(opt);
 
-  //if (options->all)         // generate all quantities within feasible region
-  //  bb->steadyMesh(options);
-  //if (options->iso_v)       // generate iso velocity curves
-  //  bb->steadyVel(options);
-  //if (options->iso_t)       // generate iso torque curves
-  //  bb->steadyTorque(options);
-  //if (options->iso_mew)     // generate iso mew curves
-  //  bb->steadyMew(options);
-
-
+  cout << "Steady turning analysis completed.  Steady turning output written to "
+       << opt->outfolder << '\n';
   // Free memory, close files
   delete bb;
-  delete options;
-  cout << "Steady turning analysis completed.  Steady turning output written to "
-       << options->outfolder << '\n';
+  delete opt;
   return 0;
 } // main
 
-void processOptions(int argc, char ** argv, steadyOpts_t * options, Whipple * bike)
+void processOptions(int argc, char ** argv, 
+                    steadyOpts_t * opt, Whipple * bike)
 {
   int c, option_index;
   bool verbose_flag = false;
@@ -67,7 +59,7 @@ void processOptions(int argc, char ** argv, steadyOpts_t * options, Whipple * bi
       {"help",          no_argument,       0, 'h'},
       {"all",           no_argument,       0, 'a'},
       {"steerpoints",   required_argument, 0, 'N'},
-      {"iso_s",         required_argument, 0, 's'},
+      {"iso_v",         required_argument, 0, 's'},
       {"iso_t",         required_argument, 0, 't'},
       {"iso_mew",       required_argument, 0, 'f'},
       {"bmparams",      required_argument, 0, 'm'},
@@ -90,7 +82,7 @@ void processOptions(int argc, char ** argv, steadyOpts_t * options, Whipple * bi
 "  -p, --params=pfile             native bike model parameters\n"
 "  -N, --steerpoints=N            number of points to mesh steer into\n"
 "  -a, --all                      all feasible steady turning quantities\n"
-"  -v, --iso_v=1,2,3,...          specify velocity level curves\n"
+"  -s, --iso_v=1,2,3,...          specify velocity level curves\n"
 "  -t, --iso_t=1,2,3,...          specify torque level curves\n"
 "  -f, --iso_mew=1,2,3,...        specify friction coefficient level curves\n"
 "  -o, --output=folder            specify to store output data\n"
@@ -118,17 +110,17 @@ void processOptions(int argc, char ** argv, steadyOpts_t * options, Whipple * bi
       bike->steadyEqns();
       delete b;
     } else if (c == 'a')
-      options->all = true;
+      opt->all = true;
     else if (c == 'N')
-      options->N = atoi(optarg);
+      opt->N = atoi(optarg);
     else if (c == 'o')
-      strcpy(options->outfolder, optarg);
+      strcpy(opt->outfolder, optarg);
     else if (c == 't')  // torque level curves specified
-      cout << "Not implemented yet.";
+      parseisoargs(opt->iso_t, optarg);
     else if (c == 'f')  // friction coefficient level curves
-      cout << "Not implemented yet.";
-    else if (c == 's')  // velocity level curves
-      cout << "Not implemented yet.";
+      parseisoargs(opt->iso_mew, optarg);
+    else if (c == 's') // velocity level curves
+      parseisoargs(opt->iso_v, optarg);
     else if (c == 'v')  // verbose flag
       verbose_flag = true;
     else {
@@ -142,3 +134,16 @@ void processOptions(int argc, char ** argv, steadyOpts_t * options, Whipple * bi
     bike->printState();
   }
 } // processOptions()
+      
+void parseisoargs(gsl_vector * v, char * optarg)
+{
+    double * iso = new double[30]; // up to 30 level curves
+    char * l = strtok(optarg, ",");
+    size_t i;
+    for (i = 0; l; l = strtok(NULL, ","), ++i)
+      iso[i] = atof(l);
+    v = gsl_vector_alloc(i);
+    for (i = 0; i < v->size; ++i)
+      gsl_vector_set(v, i, iso[i]);
+    delete [] iso;
+} // parseisoargs()

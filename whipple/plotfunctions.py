@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import numpy as np
 
 def plotevals(data, folder):
     plt.figure()
@@ -102,6 +103,66 @@ def plotconstraints(d, folder):
     f3a5.axes.set_xlabel('seconds')
     plt.savefig(folder + 'constraints.pdf')
 
+def plotcfglim(data, folder):
+    plt.plot(data['q1_min'][:], data['q3'][:], 'k-.')
+    plt.plot(data['q1_max'][:], data['q3'][:], 'k-.')
+
+def plotsteadyboundary(data, folder):
+    plt.plot(data['q1_z'][:], data['q3'][:], 'k-')
+    plt.plot(data['q1_i'][:], data['q3'][:], 'k--')
+
+def steadyturningplots(plot_dict, data, folder):
+    #  create a single figure for all steady turning plots
+    fig = plt.figure()
+    fig.set_size_inches(135.0/25.4, 135.0/25.4)
+    ax = fig.add_axes((.1, .1, .8, .8))
+    ax.grid(b=True, which='both')
+    ax.set_xlabel(r'Rear frame lean [radians]')
+    ax.set_ylabel(r'Steer [radians]')
+    ax.set_xlim(-np.pi/2.0, np.pi/2.0)
+    ax.set_ylim(0.0, np.pi)
+    # Major ticks
+    ax.xaxis.set_ticks([-np.pi/2.0, -np.pi/3.0, -np.pi/6.0,
+        0.0, np.pi/6.0, np.pi/3.0, np.pi/2.0])
+    # Minor ticks
+    ax.xaxis.set_ticks([-np.pi/2.0 + np.pi/18.0, -np.pi/2.0 + np.pi/9.0, 
+        -np.pi/3.0 + np.pi/18.0, -np.pi/3.0 + np.pi/9.0, 
+        -np.pi/6.0 + np.pi/18.0, -np.pi/6.0 + np.pi/9.0, 
+        np.pi/18.0, np.pi/9.0,
+        np.pi/6.0 + np.pi/18.0, np.pi/6.0 + np.pi/9.0,
+        np.pi/3.0 + np.pi/18.0, np.pi/3.0 + np.pi/9.0,
+        ], minor=True)
+    ax.xaxis.set_ticks_position('none')
+    # Tick labels
+    ax.xaxis.set_ticklabels([r'$-\frac{\pi}{2}$', r'$-\frac{\pi}{3}$',
+                             r'$-\frac{\pi}{6}$', r'$0$', r'$\frac{\pi}{6}$',
+                             r'$\frac{\pi}{3}$', r'$\frac{\pi}{2}$'])
+
+    # Major ticks
+    ax.yaxis.set_ticks([0.0, np.pi/6.0, np.pi/3.0, 
+                        np.pi/2.0, 2.0*np.pi/3.0,
+                        5.0*np.pi/6.0, np.pi])
+    # Minor ticks
+    ax.yaxis.set_ticks([np.pi/18.0, np.pi/9.0,
+                        2.0*np.pi/9.0, 5.0*np.pi/18.0,
+                        7.0*np.pi/18.0, 4.0*np.pi/9.0, 
+                        5.0*np.pi/9.0, 11.0*np.pi/18.0,
+                        13.0*np.pi/18.0, 7.0*np.pi/9.0,
+                        8.0*np.pi/9.0, 17.0*np.pi/18.0], minor=True)
+    # for some reason this removes labels
+    #ax.yaxis.set_ticks_position('none')
+    ax.yaxis.set_ticklabels([r'$0$', r'$\frac{\pi}{6}$',
+                             r'$\frac{\pi}{3}$', r'$\frac{\pi}{2}$',
+                             r'$\frac{2\pi}{3}$', r'$\frac{5\pi}{6}$',
+                             r'$\pi$'])
+
+    # first two come from boundary data type, which is the first element of the
+    # steady_data list
+    if plot_dict['cfglim']:
+        plotcfglim(data[0], folder)
+    if plot_dict['feasibleboundary']:
+        plotsteadyboundary(data[0], folder)
+
 def timeseriesplots(plot_dict, sim_data, folder):
     if plot_dict['orientation']:
         plotorientation(sim_data, folder)
@@ -117,12 +178,14 @@ def timeseriesplots(plot_dict, sim_data, folder):
 def plotcontroller(plot_dict,
                    sim_data=None,
                    eval_data=None,
-                   steady_turning_data=None,
+                   steady_data=None,
                    folder=None):
 
     if folder == None:
         folder = ""
     if sim_data != None:
         timeseriesplots(plot_dict, sim_data, folder)
-    if eval_data != None and plot_dict['evals']:
+    if eval_data != None:
         plotevals(eval_data, folder)
+    if steady_data != None:
+        steadyturningplots(plot_dict, steady_data, folder)

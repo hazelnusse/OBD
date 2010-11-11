@@ -2,22 +2,24 @@
  * 
  * Copyright (C) 2010 Dale Lukas Peterson
  * 
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 3 of the License, or (at
- * your option) any later version.
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation; either version 3 of the License, or (at your option)
+ * any later version.
  * 
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
  * 
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ * You should have received a copy of the GNU General Public License along with
+ * this program; if not, write to the Free Software Foundation, Inc., 51
+ * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 #ifndef GSLVECUTILS_H
 #define GSLVECUTILS_H
+#define GSL_RANGE_CHECK_OFF
+#define HAVE_INLINE
 
 #include "gslVecUtils.h"
 
@@ -28,14 +30,13 @@ gsl_vector * linspaceN(double start, double stop, size_t N)
     return NULL;
   else if (N == 1) {
     vec = gsl_vector_alloc(N);
-    vec->data[0] = start;
+    gsl_vector_set(vec, 0, start);
   } else {
-    int i;
     vec = gsl_vector_alloc(N);
     double delta = (stop - start) /  (double) (N - 1);
 
-    for (i = 0; i < N; ++i)
-      vec->data[i] = start + i*delta;
+    for (size_t i = 0; i < N; ++i)
+      gsl_vector_set(vec, i, start + i*delta);
   }
 
   return vec;
@@ -45,18 +46,17 @@ gsl_vector * linspace(double start, double stop, double delta)
 {
   if (delta == 0.0)
     return NULL;
-  int N = floor(fabs((start - stop) / delta)) + 1;
+  size_t N = floor(fabs((start - stop) / delta)) + 1;
   gsl_vector * vec = gsl_vector_alloc(N);
   if (N == 1) {
-    vec->data[0] = start;
+    gsl_vector_set(vec, 0, start);
   } else {
-    int i;
     if (start < stop) 
-      for (i = 0; i < N; ++i)
-        vec->data[i] = start + i*delta;
+      for (size_t i = 0; i < N; ++i)
+        gsl_vector_set(vec, i, start + i*delta);
     else
-      for (i = 0; i < N; ++i)
-        vec->data[i] = start - i*delta;
+      for (size_t i = 0; i < N; ++i)
+        gsl_vector_set(vec, i, start - i*delta);
   }
 
   return vec;
@@ -65,8 +65,7 @@ gsl_vector * linspace(double start, double stop, double delta)
 // Returns 1 if all eigenvalues have negative real part, otherwise returns 0
 int stable(gsl_vector_complex * evals)
 {
-  unsigned int i;
-  for (i = 0; i < evals->size; ++i)
+  for (size_t i = 0; i < evals->size; ++i)
     if (!(GSL_REAL(gsl_vector_complex_get(evals, i)) < 0.0))
       return 0;
   return 1;
@@ -74,22 +73,20 @@ int stable(gsl_vector_complex * evals)
 
 gsl_vector * zeros(size_t N)
 {
-  unsigned long i;
   gsl_vector * vec = gsl_vector_alloc(N);
 
-  for (i = 0; i < N; ++i)
-    vec->data[i] = 0.0;
+  for (size_t i = 0; i < N; ++i)
+    gsl_vector_set(vec, i, 0.0);
 
   return vec;
 } // zeros()
 
 gsl_vector * ones(size_t N)
 {
-  unsigned long i;
   gsl_vector * vec = gsl_vector_alloc(N);
 
-  for (i = 0; i < N; ++i)
-    vec->data[i] = 1.0;
+  for (size_t i = 0; i < N; ++i)
+    gsl_vector_set(vec, i, 1.0);
 
   return vec;
 } // ones()

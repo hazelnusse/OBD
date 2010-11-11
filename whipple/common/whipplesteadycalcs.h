@@ -1,6 +1,25 @@
+/* whipplesteadycalcs.h
+ * 
+ * Copyright (C) 2010 Dale Lukas Peterson
+ * 
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation; either version 3 of the License, or (at your option)
+ * any later version.
+ * 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ * 
+ * You should have received a copy of the GNU General Public License along with
+ * this program; if not, write to the Free Software Foundation, Inc., 51
+ * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ */
 #ifndef WHIPPLESTEADYBOUNDARIES_H
 #define WHIPPLESTEADYBOUNDARIES_H
 #define GSL_RANGE_CHECK_OFF
+#include <string>
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_multiroots.h>
@@ -43,9 +62,18 @@ static int inf_fdf(const gsl_vector * x, void * params,
 // correspond to.  Ideally, these quantities are provide from the index that is
 // returned by StaticEq(), along with the corresponding lean and pitch values
 // at that index.
-static int infspeed(gsl_vector * lean, gsl_vector * pitch,
+static void infspeed(gsl_vector * lean, gsl_vector * pitch,
                     double lean_ig, double pitch_ig, int ig_index,
                     const gsl_vector * steer, Whipple * bike);
+
+// For all values of lean and steer within the region of feasible steady turns,
+// calculate u5^2, then compute eigenvalues and eigenvectors for both forward
+// and backwards speeds.
+//static void steadyStability(gsl_vector * lean_zero, gsl_vector * pitch_zero,
+//                            gsl_vector * lean_inf,  gsl_vector * pitch_inf,
+//                            gsl_vector * steer,
+//                       int ig_index, steadyOpts_t * options);
+
 
 // Convenience functions used when solving the various nonlinear systems
 
