@@ -86,7 +86,7 @@ static void iterateError(int status, const char * routine);
 // Increases ftol by an order of magnitude and subtracts 1 from i so that loop
 // iteration is repeated using a greater error tolerance.  Also display a
 // warning to stderr.
-static void increaseftol(double * ftol, int * i,
+static void increaseftol(double * ftol, int * i, int iter_max,
                          const char * routine, double steer);
 
 #endif
