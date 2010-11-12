@@ -24,7 +24,7 @@
 
 // Forward declaration
 void processOptions(int argc, char ** argv, steadyOpts_t * options, Whipple * bike);
-void parseisoargs(gsl_vector * v, char * optarg);
+void parseisoargs(gsl_vector ** v, char * optarg);
 
 int main(int argc, char ** argv)
 {
@@ -116,11 +116,11 @@ void processOptions(int argc, char ** argv,
     else if (c == 'o')
       strcpy(opt->outfolder, optarg);
     else if (c == 't')  // torque level curves specified
-      parseisoargs(opt->iso_t, optarg);
+      parseisoargs(&(opt->iso_t), optarg);
     else if (c == 'f')  // friction coefficient level curves
-      parseisoargs(opt->iso_mew, optarg);
+      parseisoargs(&(opt->iso_mew), optarg);
     else if (c == 's') // velocity level curves
-      parseisoargs(opt->iso_v, optarg);
+      parseisoargs(&(opt->iso_v), optarg);
     else if (c == 'v')  // verbose flag
       verbose_flag = true;
     else {
@@ -135,15 +135,15 @@ void processOptions(int argc, char ** argv,
   }
 } // processOptions()
       
-void parseisoargs(gsl_vector * v, char * optarg)
+void parseisoargs(gsl_vector ** v, char * optarg)
 {
     double * iso = new double[30]; // up to 30 level curves
     char * l = strtok(optarg, ",");
     size_t i;
     for (i = 0; l; l = strtok(NULL, ","), ++i)
       iso[i] = atof(l);
-    v = gsl_vector_alloc(i);
-    for (i = 0; i < v->size; ++i)
-      gsl_vector_set(v, i, iso[i]);
+    *v = gsl_vector_alloc(i);
+    for (i = 0; i < (*v)->size; ++i)
+      gsl_vector_set(*v, i, iso[i]);
     delete [] iso;
 } // parseisoargs()

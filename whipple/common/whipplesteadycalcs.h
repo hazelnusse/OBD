@@ -66,6 +66,24 @@ static void infspeed(gsl_vector * lean, gsl_vector * pitch,
                     double lean_ig, double pitch_ig, int ig_index,
                     const gsl_vector * steer, Whipple * bike);
 
+
+// Constant velocity level curves, steer and u5^2 as parameter
+// F:  [kinematic constraint; steady lean eom]
+static int cv_f(const gsl_vector * x, void * params, gsl_vector * f);
+static int cv_df(const gsl_vector * x, void * params, gsl_matrix * J);
+static int cv_fdf(const gsl_vector * x, void * params,
+                  gsl_vector * f, gsl_matrix * J);
+
+// Give the steer discretized in the range of [0, pi], solve for the constant
+// speed level curve.
+// Be sure to set bike->q1 = 0, bike->q3, and solve for correct pitch before
+// calling cv(); this is what is used as the initial guess when steer is increased
+// from 0 to PI.
+// Also, be sure to set bike->u5 to appropriate level curve value before
+// calling
+static void cv(gsl_vector * lean, gsl_vector * pitch,
+               const gsl_vector * steer, Whipple * bike);
+
 // For all values of lean and steer within the region of feasible steady turns,
 // calculate u5^2, then compute eigenvalues and eigenvectors for both forward
 // and backwards speeds.
@@ -75,18 +93,21 @@ static void infspeed(gsl_vector * lean, gsl_vector * pitch,
 //                       int ig_index, steadyOpts_t * options);
 
 
+
 // Convenience functions used when solving the various nonlinear systems
 
 // If gsl_multiroot_fdfsolver_iterate() returns non-zero, then it either
 // encountered a nan or inf in the function or its derivative, or for some
 // reason no progress is being made.  Currently this calls exit(1), and I have
 // not encountered these error codes in practice (thankfully)
-static void iterateError(int status, const char * routine);
+static void iterateError(int status, const char * routine, double steer);
 
 // Increases ftol by an order of magnitude and subtracts 1 from i so that loop
 // iteration is repeated using a greater error tolerance.  Also display a
 // warning to stderr.
 static void increaseftol(double * ftol, int * i, int iter_max,
                          const char * routine, double steer);
+
+static void writeBndryRecord_dt(const char * filename);
 
 #endif

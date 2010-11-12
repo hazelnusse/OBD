@@ -110,6 +110,10 @@ def plotcfglim(data, folder):
 def plotsteadyboundary(data, folder):
     plt.plot(data['q1_z'][:], data['q3'][:], 'k-')
     plt.plot(data['q1_i'][:], data['q3'][:], 'k--')
+        
+def plotisovelocity(data, N, folder):
+    for i in range(N):
+        plt.plot(data['q1_' + str(i)][:], data['q3'][:], 'r-')
 
 def steadyturningplots(plot_dict, data, folder):
     #  create a single figure for all steady turning plots
@@ -162,6 +166,8 @@ def steadyturningplots(plot_dict, data, folder):
         plotcfglim(data[0], folder)
     if plot_dict['feasibleboundary']:
         plotsteadyboundary(data[0], folder)
+    if plot_dict['iso_velocity']:
+        plotisovelocity(data[1], plot_dict['iso_velocity'], folder)
 
 def timeseriesplots(plot_dict, sim_data, folder):
     if plot_dict['orientation']:

@@ -10,8 +10,9 @@ outfolder = "results/"
 # Parameter files:
 pfiles = ['benchmark.txt',
           'benchmark_toroidal.txt',
-          'test.txt']
-parameters = "bikeparameters/" + pfiles[0]
+          'test.txt',
+          'test_gyro.txt']
+parameters = "bikeparameters/" + pfiles[3]
 
 # TODO add this information to a text file of some sort that is stored along
 # with the eigenvalue output data
@@ -35,17 +36,24 @@ ic = 'initialconditions/' + sfiles[0]
 tf = 5.0
 fps = 60.0
 
+
+sim_data="None"
+"""
 os.system('whipplesim' +
           ' -m ' + parameters +
           ' -s ' + ic +
           ' -t ' + str(tf) +
           ' -f ' + str(fps) +
           ' -o ' + outfolder)
+"""
 
 # options for steady turning plots
+iso_v = "2.0,8.0,10.0"
 os.system('whipplesteady' +
+          ' -p ' + parameters +
+          ' -v ' +
+          ' -s ' + iso_v  +
           ' -o ' + outfolder)
-
 
 # Copy the parameters and initial state that were used as inputs to the
 # eigenanalysis / simulation
@@ -59,15 +67,17 @@ makeplots=\
 """import numpy as np
 import plotfunctions as pf
 import matplotlib.pyplot as plt
-from sim_record import sim_dt
+#from sim_record import sim_dt
 from eval_record import eval_dt
 from boundary_record import boundary_dt
+from iso_velocity_record import iso_v_dt, N_iso_v
 
 # Get the data from file and put into a custom data type -- examine
 # sim_record.py, eval_record.py for details on data fields.
-sim_data = np.fromfile("simulation.dat", dtype=sim_dt)
+#sim_data = np.fromfile("simulation.dat", dtype=sim_dt)
 eval_data = np.fromfile("eigenvalues.dat", dtype=eval_dt)
 boundary_data = np.fromfile("boundary.dat", dtype=boundary_dt)
+iso_v_data = np.fromfile("iso_velocity.dat", dtype=iso_v_dt)
 
 # Choose which plots to generate here
 plot_dict = {'evals': True,
@@ -77,18 +87,20 @@ plot_dict = {'evals': True,
              'constraintforces': True,
              'constraints': True,
              'cfglim' : True,
-             'feasibleboundary' : True}
+             'feasibleboundary' : True,
+             'iso_velocity' : N_iso_v}
 
 # Make the plots and save them to file
 pf.plotcontroller(plot_dict,
-                  sim_data,
-                  [eval_data],
-                  steady_data=[boundary_data],
+                  sim_data="""
+makeplots+=sim_data
+makeplots+=""",
+                  eval_data=[eval_data],
+                  steady_data=[boundary_data, iso_v_data],
                   folder="")
 
 # Display the plots on screen
-plt.show()
-"""
+plt.show()"""
 
 fp = open(outfolder + "plotter.py", "w")
 fp.write(makeplots)

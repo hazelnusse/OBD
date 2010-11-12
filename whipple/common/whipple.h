@@ -139,7 +139,6 @@ class Whipple {
     // Steady turning related functions
     void steadyEqns(void);
     void steadyCalcs(steadyOpts_t * options);
-    void writeBndryRecord_dt(const char * filename) const;
 
     // Accessors
     void writeEvalRecord_dt(const char * filename) const;

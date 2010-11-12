@@ -17,13 +17,15 @@
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 #include "whipplesteadycalcs.h"
+#define FTOL 1e-13
+#define ITER_MAX 400
 
-void Whipple::writeBndryRecord_dt(const char * filename) const
+static void writeBndryRecord_dt(const char * filename)
 {
   ofstream fp(filename, ios::out);
   if (fp.is_open()) {
-    fp << "import numpy as np\n";
-    fp << "boundary_dt = np.dtype([('q3', np.float64),\n"
+    fp << "import numpy as np\n"
+          "boundary_dt = np.dtype([('q3', np.float64),\n"
           "                        ('q1_z', np.float64),\n"
           "                        ('q2_z', np.float64),\n"
           "                        ('q1_i', np.float64),\n"
@@ -39,6 +41,31 @@ void Whipple::writeBndryRecord_dt(const char * filename) const
     exit(0);
   }
 } // writeBndryRecord_dt()
+
+static void writeiso_velRecord_dt(const char * filename, size_t N)
+{
+  ofstream fp(filename, ios::out);
+  if (fp.is_open()) {
+    fp << "import numpy as np\n";
+    fp << "iso_v_dt = np.dtype([('q3', np.float64),\n";
+    for (size_t i = 0; i < N; ++i) {
+      fp << "                     ('q1_" << char(i+48)
+         << "', np.float64),\n"
+         << "                     ('q2_" << char(i+48)
+         << "', np.float64)";
+      if (i < N - 1)
+        fp << ",\n";
+      else if (i == N - 1)
+        fp << "])\n";
+    }
+    fp << "N_iso_v = " << char(N + 48) << '\n';
+    fp.close();
+  } else {
+    cerr << "Unable to open " << filename << "for writing.\n";
+    cerr << "Aborting.\n";
+    exit(0);
+  }
+} // writeiso_velRecord_dt()
 
 // Process command line specified options to generate:
 // 1) Boundary curves -- steady_boundary_curves.dat
@@ -79,25 +106,55 @@ void Whipple::steadyCalcs(steadyOpts_t * opt)
 
   // Find configurational limits
   cfglim(lean_max, pitch_max, lean_min, pitch_min, steer, this);
+  
+  // Write boundary data to file
+  filename = opt->outfolder; filename += "boundary.dat";
+  FILE * fp = fopen(filename.c_str(), "wb");
+  gsl_matrix_fwrite(fp, M);   // writes to file in row-major format
+  fclose(fp);
+  // Write Numpy data type information to file
+  filename = opt->outfolder; filename += "boundary_record.py";
+  writeBndryRecord_dt(filename.c_str());
+
+  if (opt->iso_v) {      // generate iso velocity curves
+    // Allocate a matrix with N rows, and 1 + 2 x number of iso velocity curves
+    // First column stores steer, subsequent columns store lean and pitch in
+    // alternating columns.
+    gsl_vector * lean_vi, * pitch_vi, * steer_vi;
+    gsl_matrix * Mv = gsl_matrix_alloc(opt->N, 1 + 2*opt->iso_v->size);
+
+    for (int i = 0; i < opt->N; ++i)
+      gsl_matrix_set(Mv, i, 0, delta * i);
+    steer_vi = &(gsl_matrix_column(Mv, 0).vector);
+
+    for (int i = 0; i < opt->iso_v->size; ++i) {
+      lean_vi = &(gsl_matrix_column(Mv, 2*i + 1).vector);
+      pitch_vi = &(gsl_matrix_column(Mv, 2*i + 2).vector);
+      q1 = q3 = 0;
+      q2 = gsl_vector_get(pitch_zero, 0);
+      u5 = -gsl_vector_get(opt->iso_v, i) / (rf + rft);
+      cv(lean_vi, pitch_vi, steer_vi, this);
+    } // for i
+
+    filename = opt->outfolder; filename += "iso_velocity.dat";
+    fp = fopen(filename.c_str(), "wb");
+    gsl_matrix_fwrite(fp, Mv);   // writes to file in row-major format
+    fclose(fp);
+    gsl_matrix_free(Mv);
+    // Write Numpy data type information to file, depends upon number of iso
+    // curves specified
+    filename = opt->outfolder; filename += "iso_velocity_record.py";
+    writeiso_velRecord_dt(filename.c_str(), opt->iso_v->size);
+  }
 
   //if (opt->all)         // generate all quantities within feasible region
   //  steadyMesh(lean_zero, pitch_zero, lean_inf, pitch_inf,  // used for bounds
   //             steer, ig_index, opt);
-  //if (opt->iso_v)       // generate iso velocity curves
-  //  bb->steadyVel(opt);
   //if (opt->iso_t)       // generate iso torque curves
   //  bb->steadyTorque(opt);
   //if (opt->iso_mew)     // generate iso mew curves
   //  bb->steadyMew(opt);
 
-  // Write boundary data to file
-  filename = opt->outfolder; filename += "boundary.dat";
-  FILE * fp = fopen(filename.c_str(), "wb");
-  gsl_matrix_fwrite(fp, M);
-  fclose(fp);
-  // Write Numpy data type information to file
-  filename = opt->outfolder; filename += "boundary_record.py";
-  writeBndryRecord_dt(filename.c_str());
 
   gsl_matrix_free(M);
 } // steadyCalcs()
@@ -148,13 +205,15 @@ static int static_fdf(const gsl_vector * x, void * params,
 static int staticEq(gsl_vector * lean, gsl_vector * pitch,
              const gsl_vector * steer, Whipple * bike)
 {
-  int i, iter, iter_max = 200, status;
-  double ftol = 1e-15;
+  int i, iter, iter_max = ITER_MAX, status;
+  double ftol = FTOL;
   gsl_vector * x = gsl_vector_alloc(2);         // vector to store the solution
   gsl_vector * u5s_coefs = zeros(steer->size);
   const gsl_multiroot_fdfsolver_type * T = gsl_multiroot_fdfsolver_newton;
   gsl_multiroot_fdfsolver *s = gsl_multiroot_fdfsolver_alloc(T, 2);
   gsl_multiroot_function_fdf f = {&static_f, &static_df, &static_fdf, 2, bike};
+  bike->q1 = bike->q3 = 0.0;
+  bike->calcPitch();
   gsl_vector_set(x, 0, bike->q1);
   gsl_vector_set(x, 1, bike->q2);
   gsl_multiroot_fdfsolver_set(s, &f, x);
@@ -168,17 +227,16 @@ static int staticEq(gsl_vector * lean, gsl_vector * pitch,
       ++iter;
       status = gsl_multiroot_fdfsolver_iterate(s);
       if (status)
-        iterateError(status, "staticEq()");
+        iterateError(status, "staticEq()", gsl_vector_get(steer, i));
       status = gsl_multiroot_test_residual(s->f, ftol);
     } while (status == GSL_CONTINUE && iter < iter_max);
-    // cout << "f = (" << s->f->data[0] << ", " << s->f->data[1] << ")\n";
 
     // Increase the tolerance by an order of magnitude to improve convergence
     if (iter == iter_max) {
       gsl_vector_set(x, 0, gsl_vector_get(lean, i-1));
       gsl_vector_set(x, 1, gsl_vector_get(pitch, i-1));
       gsl_multiroot_fdfsolver_set(s, &f, x);
-      increaseftol(&ftol, &i, iter_max, "StaticEq()", bike->q3);
+      increaseftol(&ftol, &i, iter_max, "staticEq()", bike->q3);
       continue;
     } // if
 
@@ -188,7 +246,7 @@ static int staticEq(gsl_vector * lean, gsl_vector * pitch,
 
     // Store the square of the coefficient of the u5^2 term;
     gsl_vector_set(u5s_coefs, i, bike->F[10] * bike->F[10]);
-    //ftol = 1e-15;  // reset the error tolerance
+    ftol = FTOL;  // reset the error tolerance
   } // for
 
   // Assign a large value to the u5s_coefs vector near steer = 0 and steer = PI
@@ -251,8 +309,8 @@ static void cfglim(gsl_vector * lean_max, gsl_vector * pitch_max,
                 gsl_vector * lean_min, gsl_vector * pitch_min,
                 const gsl_vector * steer, Whipple * bike)
 {
-  int i, N = steer->size, iter = 0, iter_max = 200, status;
-  double ftol = 1e-14;
+  int i, N = steer->size, iter = 0, iter_max = ITER_MAX, status;
+  double ftol = FTOL;
   gsl_vector * x = gsl_vector_alloc(2);         // vector to store the solution
   gsl_vector * lean, * pitch;
   const gsl_multiroot_fdfsolver_type * T = gsl_multiroot_fdfsolver_newton;
@@ -279,25 +337,24 @@ static void cfglim(gsl_vector * lean_max, gsl_vector * pitch_max,
         ++iter;
         status = gsl_multiroot_fdfsolver_iterate(s);
         if (status)
-          iterateError(status, "cfglim()");
+          iterateError(status, "cfglim()", gsl_vector_get(steer, i));
         status = gsl_multiroot_test_residual(s->f, ftol);
       } while(status == GSL_CONTINUE && iter < iter_max);
-      //cout << "f = (" << s->f->data[0] << ", " << s->f->data[1] << ")\n";
       
       // Increase the tolerance by an order of magnitude to improve convergence
-      if (iter == iter_max) {
-        gsl_vector_set(x, 0, gsl_vector_get(lean, i-1));
-        gsl_vector_set(x, 1, gsl_vector_get(pitch, i-1));
-        gsl_multiroot_fdfsolver_set(s, &f, x);
-        increaseftol(&ftol, &i, iter_max, "cfglim()", bike->q3);
-        continue;
-      } // if
+      //if (iter == iter_max) {
+      //  gsl_vector_set(x, 0, gsl_vector_get(lean, i-1));
+      //  gsl_vector_set(x, 1, gsl_vector_get(pitch, i-1));
+      //  gsl_multiroot_fdfsolver_set(s, &f, x);
+      //  increaseftol(&ftol, &i, iter_max, "cfglim()", bike->q3);
+      //  continue;
+      //} // if
 
       // Store the lean and pitch
       gsl_vector_set(lean, i, gsl_vector_get(s->x, 0));
       gsl_vector_set(pitch, i, gsl_vector_get(s->x, 1));
-      // Reset ftol in case it had been increased due to convergence issues
-      //ftol = 1e-15;
+
+      ftol = FTOL;      // reset FTOL
     } // for i (steer from PI/2 to PI)
     gsl_vector_set(lean, i, gsl_vector_get(lean, i-1));
     gsl_vector_set(pitch, i, gsl_vector_get(pitch, i-1));
@@ -313,25 +370,24 @@ static void cfglim(gsl_vector * lean_max, gsl_vector * pitch_max,
         ++iter;
         status = gsl_multiroot_fdfsolver_iterate(s);
         if (status)
-          iterateError(status, "cfglim()");
+          iterateError(status, "cfglim()", gsl_vector_get(steer, i));
         status = gsl_multiroot_test_residual(s->f, ftol);
       } while(status == GSL_CONTINUE && iter < iter_max);
-      //cout << "f = (" << s->f->data[0] << ", " << s->f->data[1] << ")\n";
       
       // Increase the tolerance by an order of magnitude to improve convergence
-      if (iter == iter_max) {
-        gsl_vector_set(x, 0, gsl_vector_get(lean, i-1));
-        gsl_vector_set(x, 1, gsl_vector_get(pitch, i-1));
-        gsl_multiroot_fdfsolver_set(s, &f, x);
-        increaseftol(&ftol, &i, iter_max, "cfglim()", bike->q3);
-        continue;
-      } // if
+      //if (iter == iter_max) {
+      //  gsl_vector_set(x, 0, gsl_vector_get(lean, i+1));
+      //  gsl_vector_set(x, 1, gsl_vector_get(pitch, i+1));
+      //  gsl_multiroot_fdfsolver_set(s, &f, x);
+      //  increaseftol(&ftol, &i, iter_max, "cfglim()", bike->q3);
+      //  continue;
+      //} // if
 
       // Store the lean and pitch
       gsl_vector_set(lean, i, gsl_vector_get(s->x, 0));
       gsl_vector_set(pitch, i, gsl_vector_get(s->x, 1));
       // Reset ftol in case it had been increased due to convergence issues
-      //ftol = 1e-15;
+      ftol = FTOL;
     } // for i (steer from PI/2 to O)
     gsl_vector_set(lean, 0, gsl_vector_get(lean, 1));
     gsl_vector_set(pitch, 0, gsl_vector_get(pitch, 1));
@@ -349,7 +405,7 @@ static int inf_f(const gsl_vector * x, void * params, gsl_vector * f)
   bike->q2 = gsl_vector_get(x, 1);       // Pitch
   bike->steadyEqns();
   gsl_vector_set(f, 0, bike->F[0]);      // Kinematic constraint equation
-  gsl_vector_set(f, 1, bike->F[10]);    // Coefficient of u5^2 in steady eom
+  gsl_vector_set(f, 1, bike->F[10]);     // Coefficient of u5^2 in steady eom
   return GSL_SUCCESS;
 } // inf_f()
 
@@ -386,8 +442,8 @@ static void infspeed(gsl_vector * lean, gsl_vector * pitch,
                     const gsl_vector * steer, Whipple * bike)
 {
   // We need 
-  int i, iter, status, iter_max = 200;
-  double ftol = 1e-15;
+  int i, iter, status, iter_max = ITER_MAX;
+  double ftol = FTOL;
 
   gsl_vector * x = gsl_vector_alloc(2);         // vector to store the solution
   const gsl_multiroot_fdfsolver_type * T = gsl_multiroot_fdfsolver_newton;
@@ -410,21 +466,22 @@ static void infspeed(gsl_vector * lean, gsl_vector * pitch,
     do {
       status = gsl_multiroot_fdfsolver_iterate(s);
       if (status)
-        iterateError(status, "infspeed()");
+        iterateError(status, "infspeed()", gsl_vector_get(steer, i));
       status = gsl_multiroot_test_residual(s->f, ftol);
     } while(status == GSL_CONTINUE && ++iter < iter_max);
     // Increase the tolerance by an order of magnitude to improve convergence
-    if (iter == iter_max) {
-      gsl_vector_set(x, 0, gsl_vector_get(lean, i-1));
-      gsl_vector_set(x, 1, gsl_vector_get(pitch, i-1));
-      gsl_multiroot_fdfsolver_set(s, &f, x);
-      increaseftol(&ftol, &i, iter_max, "infspeed()", bike->q3);
-      continue;
-    } // if
+    //if (iter == iter_max) {
+     // gsl_vector_set(x, 0, gsl_vector_get(lean, i+1));
+     // gsl_vector_set(x, 1, gsl_vector_get(pitch, i+1));
+    //  gsl_multiroot_fdfsolver_set(s, &f, x);
+     // increaseftol(&ftol, &i, iter_max, "infspeed()", bike->q3);
+     // continue;
+    //} // if
     
     // Store the lean into the lean vector
     gsl_vector_set(lean, i, gsl_vector_get(s->x, 0));
     gsl_vector_set(pitch, i, gsl_vector_get(s->x, 1));
+    ftol = FTOL; // reset ftol
   } // for
   gsl_vector_set(lean, i, gsl_vector_get(lean, 1));
   gsl_vector_set(pitch, i, gsl_vector_get(pitch, 1));
@@ -445,7 +502,7 @@ static void infspeed(gsl_vector * lean, gsl_vector * pitch,
     do {
       status = gsl_multiroot_fdfsolver_iterate(s);
       if (status)
-        iterateError(status, "infspeed()");
+        iterateError(status, "infspeed()", gsl_vector_get(steer, i));
       status = gsl_multiroot_test_residual(s->f, ftol);
     } while (status == GSL_CONTINUE && ++iter < iter_max);
     // Increase the tolerance by an order of magnitude to improve convergence
@@ -460,6 +517,7 @@ static void infspeed(gsl_vector * lean, gsl_vector * pitch,
     // Store the lean into the lean vector
     gsl_vector_set(lean, i, gsl_vector_get(s->x, 0));
     gsl_vector_set(pitch, i, gsl_vector_get(s->x, 1));
+    ftol = FTOL; // reset ftol
   } // for
   gsl_vector_set(lean, i, gsl_vector_get(lean, i - 1));
   gsl_vector_set(pitch, i, gsl_vector_get(pitch, i - 1));
@@ -468,13 +526,111 @@ static void infspeed(gsl_vector * lean, gsl_vector * pitch,
   gsl_vector_free(x);
 }
 
-static void iterateError(int status, const char * routine)
+static int cv_f(const gsl_vector * x, void * params, gsl_vector * f)
+{
+  Whipple * bike = (Whipple *) params;
+  bike->q1 = gsl_vector_get(x, 0);       // Lean
+  bike->q2 = gsl_vector_get(x, 1);       // Pitch
+  bike->steadyEqns();
+  gsl_vector_set(f, 0, bike->F[0]);      // Kinematic constraint equation
+  gsl_vector_set(f, 1, bike->F[1]);      // Steady Lean EOM
+  return GSL_SUCCESS;
+} // cv_f()
+
+static int cv_df(const gsl_vector * x, void * params, gsl_matrix * J)
+{
+  Whipple * bike = (Whipple *) params;
+  bike->q1 = gsl_vector_get(x, 0);       // Lean
+  bike->q2 = gsl_vector_get(x, 1);       // Pitch
+  bike->steadyEqns();
+  gsl_matrix_set(J, 0, 0, bike->dF[0]);  // df0/dq1
+  gsl_matrix_set(J, 0, 1, bike->dF[1]);  // df0/dq2
+  gsl_matrix_set(J, 1, 0, bike->dF[3]);  // df1/dq1
+  gsl_matrix_set(J, 1, 1, bike->dF[4]);  // df1/dq2
+  return GSL_SUCCESS;
+} // cv_df()
+
+static int cv_fdf(const gsl_vector * x, void * params,
+                  gsl_vector * f, gsl_matrix * J)
+{ 
+  Whipple * bike = (Whipple *) params;
+  bike->q1 = gsl_vector_get(x, 0);       // Lean
+  bike->q2 = gsl_vector_get(x, 1);       // Pitch
+  bike->steadyEqns();
+  gsl_vector_set(f, 0, bike->F[0]);      // Kinematic constraint equation
+  gsl_vector_set(f, 1, bike->F[1]);      // Steady Lean EOM
+  gsl_matrix_set(J, 0, 0, bike->dF[0]);
+  gsl_matrix_set(J, 0, 1, bike->dF[1]);
+  gsl_matrix_set(J, 1, 0, bike->dF[3]);
+  gsl_matrix_set(J, 1, 1, bike->dF[4]);
+  //cout << "(q1, q2, q3) = (" << bike->q1 << ", " << bike->q2 << ", " << bike->q3
+  //     << ")\n (f, J) = ([" << f->data[0] << ", " << f->data[1] << "], [" << J->data[0] << ", " << J->data[1] << ", " << J->data[2] << ", " << J->data[3] << "])\n";
+  return GSL_SUCCESS;
+} // cv_fdf()
+
+static void cv(gsl_vector * lean, gsl_vector * pitch,
+               const gsl_vector * steer, Whipple * bike)
+{
+  int i, iter, iter_max = ITER_MAX, status;
+  double ftol = FTOL;
+  gsl_vector * x = gsl_vector_alloc(2);         // vector to store the solution
+  const gsl_multiroot_fdfsolver_type * T = gsl_multiroot_fdfsolver_newton;
+  gsl_multiroot_fdfsolver *s = gsl_multiroot_fdfsolver_alloc(T, 2);
+  gsl_multiroot_function_fdf f = {&cv_f, &cv_df, &cv_fdf, 2, bike};
+
+  gsl_vector_set(x, 0, bike->q1);
+  gsl_vector_set(x, 1, bike->q2);
+  bike->q3 = gsl_vector_get(steer, 0);
+  gsl_multiroot_fdfsolver_set(s, &f, x);
+  gsl_vector_set(lean, 0, gsl_vector_get(s->x, 0));
+  gsl_vector_set(pitch, 0, gsl_vector_get(s->x, 1));
+
+  // for loop to loop over all values of steer
+  for (i = 1; i < steer->size-1; ++i) {
+    bike->q3 = gsl_vector_get(steer, i);  // steer as a parameter
+    iter = 0;
+    do
+    {
+      status = gsl_multiroot_fdfsolver_iterate(s);
+      if (status)
+        iterateError(status, "cv()", gsl_vector_get(steer, i));
+      status = gsl_multiroot_test_residual(s->f, ftol);
+    } while (status == GSL_CONTINUE && ++iter < iter_max);
+
+    // Increase the tolerance by an order of magnitude to improve convergence
+    //if (iter == iter_max) {
+    //  gsl_vector_set(x, 0, gsl_vector_get(lean, i-1));
+    //  gsl_vector_set(x, 1, gsl_vector_get(pitch, i-1));
+    //  gsl_multiroot_fdfsolver_set(s, &f, x);
+    //  increaseftol(&ftol, &i, iter_max, "cv()", bike->q3);
+    //  continue;
+    //} // if
+
+    // Store the lean into the lean vector
+    gsl_vector_set(lean, i, gsl_vector_get(s->x, 0));
+    gsl_vector_set(pitch, i, gsl_vector_get(s->x, 1));
+    //  cout << gsl_vector_get(lean, i) << ", " 
+    //       << gsl_vector_get(pitch, i) << ", " 
+    //       << gsl_vector_get(steer, i) << '\n';
+    //ftol = FTOL;
+  } // for
+  bike->q1 = 0.0; bike->q3 = M_PI; bike->calcPitch();
+  gsl_vector_set(lean, i, 0.0);
+  gsl_vector_set(pitch, i, bike->q2);
+
+  // Free dynamically allocated variables
+  gsl_multiroot_fdfsolver_free(s);
+  gsl_vector_free(x);
+} // cv()
+
+static void iterateError(int status, const char * routine, double steer)
 {
   if (status == GSL_EBADFUNC)
     cerr << "GSL_EBADFUN";
   else if (status == GSL_ENOPROG)
     cerr << "GSL_ENOPROG";
-  cerr << " encountered in " << routine << ".  Aborting.\n";
+  cerr << " encountered in " << routine << " at steer " << steer <<
+          ".  Aborting.\n";
   abort();
 }
 
