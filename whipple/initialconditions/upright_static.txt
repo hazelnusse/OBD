@@ -1,0 +1,21 @@
+# Initial conditions used for nonlinear simulation presented in benchmark
+# paper.
+#
+# The quantity specified for pitch will be used as an initial guess for the
+# root finding algorithm which solves for the pitch which satisfies the
+# holonomic constraint.
+#
+# This file should be used as a template for creating other files with
+# parameters.  The order of the parameters doesn't matter, but each line should
+# have only the parameter, the '=' character, and the numerical value, which
+# will be converted to a IEEE double precision floating point number.
+yaw=0.0
+lean=0.0
+steer=0.0
+rw=0.0
+fw=0.0
+x=0.0
+y=0.0
+leanrate=0.0
+steerrate=0.0
+fwrate=0.0
