@@ -73,7 +73,7 @@ void processOptions(int argc, char ** argv, char * outfolder, Whipple * bike)
   while (1) {
     static struct option long_options[] = {
       {"help",          no_argument,       0, 'h'},
-      {"bmparams",      required_argument, 0, 'm'},
+      {"mjparams",      required_argument, 0, 'm'},
       {"params",        required_argument, 0, 'p'},
       {"state",         required_argument, 0, 's'},
       {"pitch_ig",      required_argument, 0, 'g'},
