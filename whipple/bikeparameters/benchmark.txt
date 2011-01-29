@@ -1,0 +1,36 @@
+# Bicycle parameters used in benchmark paper.
+#
+# This file should be used as a template for creating other files with
+# parameters.  The order of the parameters doesn't matter, but each line should
+# have only the parameter, the '=' character, and the numerical value, which
+# will be converted to a IEEE double precision floating point number.
+#
+# No blank lines are allowed.  Comment lines may start with '#' or '%'
+w=1.02
+c=0.08
+lambda=0.31415926535897931
+g=9.81
+rrt=0.0
+rft=0.0
+rr=0.3
+mr=2.0
+IRxx=0.0603
+IRyy=0.12
+xb=0.3
+zb=-0.9
+mb=85.0
+IBxx=9.2
+IByy=11.0
+IBzz=2.8
+IBxz=2.4
+xh=0.9
+zh=-0.7
+mh=4.0
+rf=0.35
+mf=3.0
+IFxx=0.1405
+IFyy=0.28
+IHxx=0.05892
+IHyy=0.06
+IHzz=0.00708
+IHxz=-0.00756
