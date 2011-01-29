@@ -60,7 +60,7 @@ gsl_vector * linspace(double start, double stop, double delta)
   }
 
   return vec;
-}
+} // linspace()
 
 // Returns 1 if all eigenvalues have negative real part, otherwise returns 0
 int stable(gsl_vector_complex * evals)
@@ -71,6 +71,7 @@ int stable(gsl_vector_complex * evals)
   return 1;
 } // stable()
 
+// Create vector of N doubles, all initialized to zero
 gsl_vector * zeros(size_t N)
 {
   gsl_vector * vec = gsl_vector_alloc(N);
@@ -81,6 +82,7 @@ gsl_vector * zeros(size_t N)
   return vec;
 } // zeros()
 
+// Create vector of N doubles, all initialized to one
 gsl_vector * ones(size_t N)
 {
   gsl_vector * vec = gsl_vector_alloc(N);
