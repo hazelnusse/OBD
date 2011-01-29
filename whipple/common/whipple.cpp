@@ -17,6 +17,7 @@
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 #include "whipple.h"
+#include "whippleutils.h"
 #define GSL_RANGE_CHECK_OFF
 #define HAVE_INLINE
 int eomwrapper(double t, const double x[10], double f[10], void * params)
@@ -362,30 +363,42 @@ void Whipple::setState(const double state[10])
 // TODO: fix inertias and cm distances
 void Whipple::setBenchmarkParameters(void)
 {
-  rr=0.3;
-  rrt=0.0;
-  rf=0.35;
-  rft=0.0;
-  lr=0.9534570696121847;
-  ls=0.2676445084476887;
-  lf=0.0320714267276193;
-  mr=87.0;
-  mf=7.0;
-  ICyy=0.0603;
-  IDxx=7.178169776497895;
-  IDyy=11;
-  IDzz=4.821830223502103;
-  IDxz=3.822553593835788;
-  IExx=0.05841337700152973;
-  IEyy=0.06;
-  IEzz=0.007586622998470264;
-  IExz=0.009119225261946296;
-  IFyy=0.28;
-  lrx=0.4707271515135145;
-  lrz=-0.477928811464608;
-  lfx=-0.005970833924186833;
-  lfz=-0.3699518200282974;
-  g=9.81;
+  MJWhippleParams * bin = new MJWhippleParams;
+  WhippleParams * bout = new WhippleParams;
+  // From Meijaard2007
+  bin->rr = 0.3;
+  bin->rrt = 0.0;
+  bin->rf = 0.35;
+  bin->rft = 0.0;
+  bin->w = 1.02;
+  bin->c = 0.08;
+  bin->lambda = M_PI/10.0;
+  bin->mr = 2.0;
+  bin->mb = 85.0;
+  bin->mh = 4.0;
+  bin->mf = 3.0;
+  bin->IRxx = 0.0603;
+  bin->IRyy = 0.12;
+  bin->IBxx = 9.2;
+  bin->IByy = 11.0;
+  bin->IBzz = 2.8;
+  bin->IBxz = 2.4;
+  bin->IHxx = 0.05892;
+  bin->IHyy = 0.06;
+  bin->IHzz = 0.00708;
+  bin->IHxz = -0.00756;
+  bin->IFxx = 0.1405;
+  bin->IFyy = 0.28;
+  bin->xb = 0.3;
+  bin->zb = -0.9;
+  bin->xh = 0.9;
+  bin->zh = -0.7;
+  bin->g = 9.81;
+  // Convert to gyrostat parameters
+  convertParameters(bout, bin);
+  setParameters(bout);
+
+  delete bin, bout;
 } // setBenchmarkParameters()
 
 void Whipple::setBenchmarkState(void)
@@ -466,6 +479,7 @@ void Whipple::calcEvals(void)
 
   // Get the eigenvalues
   gsl_eigen_nonsymmv(m, evals, evecs, w);
+  gsl_eigen_nonsymmv_sort(evals, evecs, GSL_EIGEN_SORT_ABS_ASC);
   getFourValues();
 } // calcEvals()
 
@@ -509,3 +523,11 @@ void Whipple::evolve(double tj, double * state)
 {
   gsl_odeiv_evolve_apply(e, c, s, &sys, &t, tj, &h, state);
 } // evolve()
+
+void Whipple::printEvals(void) const
+{
+  cout << "evals:\n";
+  gsl_vector_complex_fprintf(stdout, evals, "%0.16g");
+}
+
+

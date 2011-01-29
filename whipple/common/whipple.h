@@ -61,7 +61,7 @@ typedef struct {
   double IFxx, IFyy;              // Front wheel inertia scalars, IFxx == IFzz
   double xb, zb, xh, zh;          // COM locations relative to rear contact
   double g;
-}  MJWhippleParams;
+} MJWhippleParams;
 
 class Whipple {
   private:
@@ -147,6 +147,7 @@ class Whipple {
     void writeState(const char * filename) const;
     void printState(void) const;
     void printParameters(void) const;
+    void printEvals (void) const;
 
     // Wrapper functions to interface with GSL required calling conventions
     friend int eomwrapper(double t, const double x[6], double f[6], void * params);
