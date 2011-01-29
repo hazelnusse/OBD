@@ -57,7 +57,13 @@ void convertParameters(WhippleParams * bout, const MJWhippleParams * bin)
   bout->lfz = z[1]*z[13] + z[2]*z[12];
   bout->mr = bin->mb + bin->mr;
   bout->mf = bin->mf + bin->mh;
+
+
+  // Spin inertias of wheels are same
   bout->ICyy = bin->IRyy;
+  bout->IFyy = bin->IFyy;
+
+  // Inertia conversions.... not sure if this is working correctly
   z[14] = bin->mr*(pow(z[7],2)+pow(z[8],2)) + bin->mb*(pow((bin->xb-z[7]),2)+pow((bin->zb-z[3]-z[8]),2));
   z[17] = bin->IBzz + bin->IRxx - bin->mr*pow(z[8],2) - bin->mb*pow((bin->zb-z[3]-z[8]),2);
   z[15] = bin->IBxx + bin->IRxx - bin->mr*pow(z[7],2) - bin->mb*pow((bin->xb-z[7]),2);
@@ -74,7 +80,6 @@ void convertParameters(WhippleParams * bout, const MJWhippleParams * bin)
   bout->IEyy = bin->IHyy + z[18];
   bout->IEzz = z[18] + z[19]*pow(z[2],2) + z[1]*(z[1]*z[21]+2*z[2]*z[20]);
   bout->IExz = z[1]*(z[1]*z[20]+z[2]*z[19]) - z[2]*(z[1]*z[21]+z[2]*z[20]);
-  bout->IFyy = bin->IFyy;
 } // convertParameters()
 
 void setBenchmarkParameters(MJWhippleParams * bike)
