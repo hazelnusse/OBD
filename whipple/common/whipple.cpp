@@ -493,8 +493,8 @@ void Whipple::getFourValues(void)
     return;
   } else
     for (i = 0; i < 4; ++i) {
-      vali = GSL_IMAG(gsl_vector_complex_get(evals, i)); 
-      valr = GSL_REAL(gsl_vector_complex_get(evals, i)); 
+      vali = GSL_IMAG(gsl_vector_complex_get(evals, i));
+      valr = GSL_REAL(gsl_vector_complex_get(evals, i));
       if (vali == 0.0) {
         fourValues[i] = valr;
         continue;
@@ -504,7 +504,7 @@ void Whipple::getFourValues(void)
     }
 } // getFourValues()
 
-int Whipple::evalCase(void)
+int Whipple::evalCase(void) const
 {
   int i, real = 0;
   for (i = 0; i < 4; ++i)
@@ -527,7 +527,5 @@ void Whipple::evolve(double tj, double * state)
 void Whipple::printEvals(void) const
 {
   cout << "evals:\n";
-  gsl_vector_complex_fprintf(stdout, evals, "%0.16g");
+  gsl_vector_complex_fprintf(stdout, evals, "%+0.16g");
 }
-
-

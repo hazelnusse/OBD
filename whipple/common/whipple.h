@@ -1,17 +1,17 @@
 /* whipple.h
- * 
+ *
  * Copyright (C) 2010 Dale Lukas Peterson
- * 
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 3 of the License, or (at
  * your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
@@ -40,7 +40,7 @@ extern "C" {
 // structure use to store command line options passed to steady turning code
 typedef struct {
   char outfolder[512];// output folder name
-  size_t N;           // # of points to mesh steer in [0, pi] 
+  size_t N;           // # of points to mesh steer in [0, pi]
   bool all;           // controls whether to mesh whole feasible region
   gsl_vector * iso_v, * iso_t, * iso_mew;
 } steadyOpts_t;
@@ -102,8 +102,8 @@ class Whipple {
     int status, iter;
 
     // Variables for calculating eigenvalues and eigenvectors
-    gsl_vector_complex *evals;
-    gsl_matrix_complex *evecs;
+    gsl_vector_complex * evals;
+    gsl_matrix_complex * evecs;
     gsl_matrix * m;
     gsl_eigen_nonsymmv_workspace * w;
     double fourValues[4];
@@ -126,7 +126,6 @@ class Whipple {
     void computeOutputs(void);
     void eoms(void);
     void evalConstants(void);
-    int evalCase(void);
     void evolve(double tj, double * state);
     void getFourValues(void);
     void initRootFinder(void);
@@ -148,6 +147,7 @@ class Whipple {
     void printState(void) const;
     void printParameters(void) const;
     void printEvals (void) const;
+    int evalCase(void) const;
 
     // Wrapper functions to interface with GSL required calling conventions
     friend int eomwrapper(double t, const double x[6], double f[6], void * params);
@@ -155,5 +155,5 @@ class Whipple {
     friend double hc_df(double q2, void * params);
     friend void hc_fdf(double q2, void * params, double * f, double * df);
     friend ostream &operator<<(ostream &file, const Whipple * discs);
-}; 
+};
 #endif
