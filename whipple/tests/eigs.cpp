@@ -1,6 +1,5 @@
-/* eigs.cpp
- *
- * Copyright (C) 2010 Dale Lukas Peterson
+/*
+ * Copyright (C) 2011 Dale Lukas Peterson
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
