@@ -1,6 +1,8 @@
 AC_PREREQ([2.67])
-AC_INIT([Open Bicycle Dynamics], [0.01], [hazelnusse@gmail.com])
-AM_INIT_AUTOMAKE
+AC_INIT([Open Bicycle Dynamics], [0.02], [hazelnusse@gmail.com])
+AM_INIT_AUTOMAKE([dist-bzip2 -Wall])
+#AM_SILENT_RULES([yes])
+
 AM_PATH_PYTHON([2.6])
 AC_CONFIG_SRCDIR([whipple/whippleeig.cpp])
 
@@ -28,6 +30,7 @@ AC_CHECK_FUNCS([floor pow sqrt])
 # All files that will be generated from templates
 AC_CONFIG_FILES([Makefile
                  whipple/common/Makefile
+                 whipple/tests/Makefile
                  whipple/Makefile])
 
 # Generate configure script
