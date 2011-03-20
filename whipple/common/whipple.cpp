@@ -439,7 +439,7 @@ void Whipple::initODESolver(void)
 } // initODESolver()
 
 void Whipple::calcPitch(void)
-{ 
+{
   iter = 0;
   // Newton's method
   gsl_root_fdfsolver_set(fdf_s, &FDF, q2);
