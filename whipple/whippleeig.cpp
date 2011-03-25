@@ -24,7 +24,7 @@
 // Structor to store the options
 typedef struct {
   char outfolder[512];
-  size_t N;
+  int N;
   double vi, vf;
 } evalOptions;
 
@@ -40,7 +40,7 @@ int main(int argc, char ** argv)
   // default parameters
   opt->outfolder[0] = '\0';
   opt->N = 201; opt->vi = 0.0; opt->vf = 10.0;
-  
+
   // Process command line options
   processOptions(argc, argv, opt, bb);
 
