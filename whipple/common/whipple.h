@@ -40,7 +40,7 @@ extern "C" {
 // structure use to store command line options passed to steady turning code
 typedef struct {
   char outfolder[512];// output folder name
-  size_t N;           // # of points to mesh steer in [0, pi]
+  int N;           // # of points to mesh steer in [0, pi]
   bool all;           // controls whether to mesh whole feasible region
   gsl_vector * iso_v, * iso_t, * iso_mew;
 } steadyOpts_t;
@@ -74,6 +74,10 @@ class Whipple {
     double q0p,q1p,q2p,q3p,q4p,q5p,q6p,q7p,u0p,u1p,u2p,u3p,u4p,u5p;
     // Inputs torques
     double Tfw,Trw,Ts;
+
+    // Boolean array to detect when wheel overlap will occur in either
+    // handlebar reversed or handlebar forward configurations.
+    bool overlap[2];
 
     // Output quantities
     double z[Z_MAX], no_fn[3], cn_cm[3], h2_cl[3], constraints[3];

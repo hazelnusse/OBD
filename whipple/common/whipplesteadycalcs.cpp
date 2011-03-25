@@ -1,17 +1,17 @@
 /* whipplesteadycalcs.cpp
- * 
+ *
  * Copyright (C) 2010 Dale Lukas Peterson
- * 
+ *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
  * Software Foundation; either version 3 of the License, or (at your option)
  * any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
  * more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License along with
  * this program; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
@@ -94,10 +94,10 @@ void Whipple::steadyCalcs(steadyOpts_t * opt)
   gsl_vector * pitch_min = &(gsl_matrix_column(M, 6).vector);
   gsl_vector * lean_max = &(gsl_matrix_column(M, 7).vector);
   gsl_vector * pitch_max = &(gsl_matrix_column(M, 8).vector);
-  
+
   // Find static equilibrium values of lean and pitch
   ig_index = staticEq(lean_zero, pitch_zero, steer, this);
-  
+
   // Find infinite speed equilibrium values of lean and pitch
   infspeed(lean_inf, pitch_inf,
            gsl_vector_get(lean_zero, ig_index),
@@ -106,7 +106,7 @@ void Whipple::steadyCalcs(steadyOpts_t * opt)
 
   // Find configurational limits
   cfglim(lean_max, pitch_max, lean_min, pitch_min, steer, this);
-  
+
   // Write boundary data to file
   filename = opt->outfolder; filename += "boundary.dat";
   FILE * fp = fopen(filename.c_str(), "wb");
@@ -127,7 +127,7 @@ void Whipple::steadyCalcs(steadyOpts_t * opt)
       gsl_matrix_set(Mv, i, 0, delta * i);
     steer_vi = &(gsl_matrix_column(Mv, 0).vector);
 
-    for (int i = 0; i < opt->iso_v->size; ++i) {
+    for (unsigned int i = 0; i < opt->iso_v->size; ++i) {
       lean_vi = &(gsl_matrix_column(Mv, 2*i + 1).vector);
       pitch_vi = &(gsl_matrix_column(Mv, 2*i + 2).vector);
       q1 = q3 = 0;
@@ -205,7 +205,8 @@ static int static_fdf(const gsl_vector * x, void * params,
 static int staticEq(gsl_vector * lean, gsl_vector * pitch,
              const gsl_vector * steer, Whipple * bike)
 {
-  int i, iter, iter_max = ITER_MAX, status;
+  int i, N = lean->size, iter, iter_max = ITER_MAX, status;
+
   double ftol = FTOL;
   gsl_vector * x = gsl_vector_alloc(2);         // vector to store the solution
   gsl_vector * u5s_coefs = zeros(steer->size);
@@ -219,7 +220,7 @@ static int staticEq(gsl_vector * lean, gsl_vector * pitch,
   gsl_multiroot_fdfsolver_set(s, &f, x);
 
   // for loop to loop over all values of steer
-  for (i = 0; i < lean->size; ++i) {
+  for (i = 0; i < N; ++i) {
     bike->q3 = gsl_vector_get(steer, i);  // steer as a parameter
     iter = 0;
     do
@@ -441,8 +442,7 @@ static void infspeed(gsl_vector * lean, gsl_vector * pitch,
                     double lean_ig, double pitch_ig, int ig_index,
                     const gsl_vector * steer, Whipple * bike)
 {
-  // We need 
-  int i, iter, status, iter_max = ITER_MAX;
+  int i, N = lean->size, iter, status, iter_max = ITER_MAX;
   double ftol = FTOL;
 
   gsl_vector * x = gsl_vector_alloc(2);         // vector to store the solution
@@ -477,7 +477,7 @@ static void infspeed(gsl_vector * lean, gsl_vector * pitch,
      // increaseftol(&ftol, &i, iter_max, "infspeed()", bike->q3);
      // continue;
     //} // if
-    
+
     // Store the lean into the lean vector
     gsl_vector_set(lean, i, gsl_vector_get(s->x, 0));
     gsl_vector_set(pitch, i, gsl_vector_get(s->x, 1));
@@ -485,7 +485,7 @@ static void infspeed(gsl_vector * lean, gsl_vector * pitch,
   } // for
   gsl_vector_set(lean, i, gsl_vector_get(lean, 1));
   gsl_vector_set(pitch, i, gsl_vector_get(pitch, 1));
-  
+
   // Setup the initial conditions
   bike->q1 = lean_ig;
   bike->q2 = pitch_ig;
@@ -495,9 +495,9 @@ static void infspeed(gsl_vector * lean, gsl_vector * pitch,
   gsl_vector_set(x, 1, bike->q2);
   gsl_multiroot_fdfsolver_set(s, &f, x);
 
-  for (i = ig_index + 1; i < steer->size - 1; ++i) {
+  for (i = ig_index + 1; i < N - 1; ++i) {
     bike->q3 = gsl_vector_get(steer, i);
-    
+
     iter = 0;
     do {
       status = gsl_multiroot_fdfsolver_iterate(s);
@@ -513,7 +513,7 @@ static void infspeed(gsl_vector * lean, gsl_vector * pitch,
       increaseftol(&ftol, &i, iter_max, "infspeed()", bike->q3);
       continue;
     } // if
-    
+
     // Store the lean into the lean vector
     gsl_vector_set(lean, i, gsl_vector_get(s->x, 0));
     gsl_vector_set(pitch, i, gsl_vector_get(s->x, 1));
@@ -571,7 +571,7 @@ static int cv_fdf(const gsl_vector * x, void * params,
 static void cv(gsl_vector * lean, gsl_vector * pitch,
                const gsl_vector * steer, Whipple * bike)
 {
-  int i, iter, iter_max = ITER_MAX, status;
+  int i, N = lean->size, iter, iter_max = ITER_MAX, status;
   double ftol = FTOL;
   gsl_vector * x = gsl_vector_alloc(2);         // vector to store the solution
   const gsl_multiroot_fdfsolver_type * T = gsl_multiroot_fdfsolver_newton;
@@ -586,7 +586,7 @@ static void cv(gsl_vector * lean, gsl_vector * pitch,
   gsl_vector_set(pitch, 0, gsl_vector_get(s->x, 1));
 
   // for loop to loop over all values of steer
-  for (i = 1; i < steer->size-1; ++i) {
+  for (i = 1; i < N - 1; ++i) {
     bike->q3 = gsl_vector_get(steer, i);  // steer as a parameter
     iter = 0;
     do
