@@ -284,9 +284,9 @@ Whipple::Whipple()
   phi = 0.0;
   d = 1.0;
   ctx = .35;
-  cty = .35; 
+  cty = .35;
   ctz = 0.0;
-  
+
   // Default inputs, parameters, and initial state
   Trw = Tfw = Ts = 0.0;
   setBenchmarkParameters();
@@ -307,7 +307,7 @@ Whipple::Whipple()
 
 Whipple::~Whipple()
 {
-  gsl_root_fdfsolver_free(fdf_s); 
+  gsl_root_fdfsolver_free(fdf_s);
   gsl_odeiv_evolve_free(e);
   gsl_odeiv_control_free(c);
   gsl_odeiv_step_free(s);
@@ -317,8 +317,95 @@ Whipple::~Whipple()
   gsl_eigen_nonsymmv_free(w);
 } // destructor
 
-void Whipple::setParameters(WhippleParams * p)
+bool Whipple::setParameters(WhippleParams * p)
 {
+  bool validparameters = true;
+
+  // Check that distances are non-negative
+  if (p->rr < 0.0) {
+    cerr << "rr must be greater than or equal to zero.\n";
+    validparameters = false;
+  }
+  if (p->rf < 0.0) {
+    cerr << "rf must be greater than or equal to zero.\n";
+    validparameters = false;
+  }
+  if (p->rrt < 0.0) {
+    cerr << "rrt must be greater than or equal to zero.\n";
+    validparameters = false;
+  }
+  if (p->rft < 0.0) {
+    cerr << "rft must be greater than or equal to zero.\n";
+    validparameters = false;
+  }
+  if (p->lr < 0.0) {
+    cerr << "lr must be greater than or equal to zero.\n";
+    validparameters = false;
+  }
+  if (p->ls < 0.0) {
+    cerr << "ls must be greater than or equal to zero.\n";
+    validparameters = false;
+  }
+  if (p->lf < 0.0) {
+    cerr << "lf must be greater than or equal to zero.\n";
+    validparameters = false;
+  }
+
+  // Check axle to axle offset is enough to avoid wheel to wheel overlap
+  if (validparameters) {
+    double minimumAxleOffset = p->rr + p->rf + p->rrt + p->rft,
+           d_zero = sqrt(pow(p->lr + p->lf, 2.0) + pow(p->ls, 2.0)),
+           d_pi   = sqrt(pow(p->lr - p->lf, 2.0) + pow(p->ls, 2.0));
+
+    if (d_zero < minimumAxleOffset) {
+      overlap[0] = true;
+      cerr << "Tire overlap will occur when steer = 0\n";
+    }
+    if (d_pi < minimumAxleOffset) {
+      overlap[1] = true;
+      cerr << "Tire overlap will occur when steer = pi\n";
+    }
+    if (overlap[0] && overlap[1]) {
+      validparameters = false;
+      cerr << "Tire overlap occurs for steer = 0 and steer = pi,"
+              "non realistic model.\n";
+    }
+  }
+
+  // Check that masses are non-negative
+  if (p->mr < 0.0) {
+    cerr << "mr must be greater than or equal to zero.\n";
+    validparameters = false;
+  }
+  if (p->mf < 0.0) {
+    cerr << "mf must be greater than or equal to zero.\n";
+    validparameters = false;
+  }
+
+  // Check that principal moments of inertia are all positive and that the
+  // triangle inequalities are satisfied.
+
+  // Rear wheel
+  if (p->ICyy < 0.0) {
+    cerr << "Rear wheel spin inertia must be non-negative.\n";
+    validparameters = false;
+  }
+  // Front wheel
+  if (p->IFyy < 0.0) {
+    cerr << "Front wheel spin inertia must be non-negative.\n";
+    validparameters = false;
+  }
+  // Rear assembly
+  if (!validInertia(p->IDxx, p->IDyy, p->IDzz, p->IDxz)) {
+    cerr << "Rear assembly inertia invalid.\n";
+    validparameters = false;
+  }
+  // Front assembly
+  if (!validInertia(p->IDxx, p->IDyy, p->IDzz, p->IDxz)) {
+    cerr << "Rear assembly inertia invalid.\n";
+    validparameters = false;
+  }
+
   ICyy = p->ICyy;
   IDxx = p->IDxx;
   IDxz = p->IDxz;
@@ -343,6 +430,8 @@ void Whipple::setParameters(WhippleParams * p)
   rft = p->rft;
   rr = p->rr;
   rrt = p->rrt;
+
+  return validparameters;
 } // setParameters()
 
 void Whipple::setState(const double state[10])
@@ -398,7 +487,8 @@ void Whipple::setBenchmarkParameters(void)
   convertParameters(bout, bin);
   setParameters(bout);
 
-  delete bin, bout;
+  delete bin;
+  delete bout;
 } // setBenchmarkParameters()
 
 void Whipple::setBenchmarkState(void)
@@ -528,4 +618,52 @@ void Whipple::printEvals(void) const
 {
   cout << "evals:\n";
   gsl_vector_complex_fprintf(stdout, evals, "%+0.16g");
+}
+
+bool Whipple::validInertia(double Ixx, double Iyy, double Izz, double Ixz) const
+{
+  bool isvalid = true;
+  double sqrt_term = sqrt(pow(Ixx - Izz, 2.0) + 4.0*Ixz*Ixz);
+  double I[3];
+
+  I[0] = Iyy;
+  I[1] = (Ixx + Izz - sqrt_term)/2.0;
+  I[2] = (Ixx + Izz + sqrt_term)/2.0;
+
+  insertionSort(3, I);
+
+  for (int i = 0; i < 3; ++i) {
+    if (I[i] < 0.0) {
+      cerr << "I" << i+1 << " is negative.\n";
+      isvalid = false;
+    }
+  } // for i
+
+  if (I[0] > I[1] + I[2]) {
+    cerr << "Inertia inequality not satsified: I1 > I2 + I3\n";
+    isvalid = false;
+  }
+  if (I[1] > I[0] + I[2]) {
+    cerr << "Inertia inequality not satsified: I2 > I1 + I3\n";
+    isvalid = false;
+  }
+  if (I[2] > I[0] + I[1]) {
+    cerr << "Inertia inequality not satsified: I3 > I1 + I2\n";
+    isvalid = false;
+  }
+
+  return isvalid;
+}
+
+void Whipple::insertionSort(int N, double ar[]) const
+{
+  int j;
+  double temp;
+  for (int i = 1; i < N; ++i)
+  {
+    temp = ar[i];
+    for (j = i - 1; j >= 0 && ar[j] > temp; j--)
+      ar[j + 1] = ar[j];
+    ar[j + 1] = temp;
+  } // for i
 }
