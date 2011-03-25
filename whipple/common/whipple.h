@@ -64,8 +64,6 @@ typedef struct {
 } MJWhippleParams;
 
 class Whipple {
-  private:
-
   public:
     double t, tf, h;
     // Constant parameters
@@ -73,8 +71,8 @@ class Whipple {
     double g,lf,lfx,lfz,lr,lrx,lrz,ls,mr,mf,rf,rft,rr,rrt;
     // State variables, and their derivatives
     double q0,q1,q2,q3,q4,q5,q6,q7,u1,u3,u5;
-    double q0p,q1p,q2p,q3p,q4p,q5p,q6p,q7p,u1p,u3p,u5p;
-    // Inputs
+    double q0p,q1p,q2p,q3p,q4p,q5p,q6p,q7p,u0p,u1p,u2p,u3p,u4p,u5p;
+    // Inputs torques
     double Tfw,Trw,Ts;
 
     // Output quantities
@@ -132,7 +130,7 @@ class Whipple {
     void initODESolver(void);
     void setBenchmarkParameters(void);
     void setBenchmarkState(void);
-    void setParameters(WhippleParams * p);
+    bool setParameters(WhippleParams * p);
     void setState(const double state[10]);
 
     // Steady turning related functions
@@ -155,5 +153,10 @@ class Whipple {
     friend double hc_df(double q2, void * params);
     friend void hc_fdf(double q2, void * params, double * f, double * df);
     friend ostream &operator<<(ostream &file, const Whipple * discs);
+
+  private:
+    bool validInertia(double Ixx, double Iyy, double Izz, double Ixz) const;
+    void insertionSort(int N, double ar[]) const;
+
 };
 #endif
