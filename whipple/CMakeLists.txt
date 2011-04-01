@@ -1,9 +1,14 @@
-include_directories("${PROJECT_SOURCE_DIR}/whipple/common")
 add_subdirectory(common)
-add_subdirectory(tests)
 
+# Make sure we can find the header files
+include_directories("${PROJECT_SOURCE_DIR}/whipple/common")
 
+# Add tests subdirectory if tests are enabled
+if (obd_build_tests)
+    add_subdirectory(tests)
+endif()
 
+# Executables which demonstrate the class
 add_executable(whippleeig whippleeig.cpp)
 target_link_libraries(whippleeig
     whipple
