@@ -5,8 +5,3 @@ add_library(whipple
     whipple_al_steady.cpp
     whipplesteadycalcs.cpp
     whippleutils.cpp)
-
-#add_library(whipplesteady
-#    whipple_al_steady.cpp
-#    whipplesteadycalcs.cpp
-#    gslVecUtils.cpp)
