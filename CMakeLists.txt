@@ -21,17 +21,21 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 project(OBD CXX C)
 cmake_minimum_required(VERSION 2.8)
 
-#set(OBD_VERSION_MAJOR 0)
-#set(OBD_VERSION_MINOR 3)
+set(OBD_VERSION_MAJOR 0)
+set(OBD_VERSION_MINOR 3)
+execute_process(COMMAND git log -1 --pretty=oneline
+                WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+                OUTPUT_VARIABLE OBD_VERSION_COMMIT)
 
-# Include custom cmake functions
-#include(cmake/internal_utils.cmake)
-#config_compiler_and_linker()  # Defined in internal_utils.cmake.
+# Keep everything up to the first space, add quotes
+string(REGEX REPLACE "([^ ]+).*"
+       "\"\\1\"" OBD_VERSION_COMMIT
+       ${OBD_VERSION_COMMIT})
 
-#configure_file("${PROJECT_SOURCE_DIR}/OBDConfig.h.in"
-#               "${PROJECT_BINARY_DIR}/OBDConfig.h")
-#
-#include_directories("${PROJECT_BINARY_DIR}")
+configure_file("${PROJECT_SOURCE_DIR}/OBDConfig.h.in"
+               "${PROJECT_BINARY_DIR}/OBDConfig.h")
+
+include_directories("${PROJECT_BINARY_DIR}")
 
 # Find GSL
 find_package(GSL REQUIRED)

@@ -1,5 +1,7 @@
 #include <QtGui>
 #include "mainwindow.h"
+#include "OBDConfig.h"
+#include <iostream>
 
 MainWindow::MainWindow()
 {
@@ -9,10 +11,16 @@ MainWindow::MainWindow()
 
 void MainWindow::about(void)
 {
-    QMessageBox::about(this, tr("About OBD"),
-            tr("<h2>Open Bicycle Dynamics</h2>"
-               "<p>Copyright &copy; 2010-2011 Dale Lukas Peterson"
-               "<p>hazelnusse@gmail.com"));
+  QString verstring = QString(tr(
+        "<h2>Open Bicycle Dynamics</h2>"
+        "Version %1.%2 commit %3"
+        "<p>Copyright &copy; 2010-2011 Dale Lukas Peterson"
+        "<p><a href=\"mailto:%4\">%4</a>"))
+                    .arg(OBD_VERSION_MAJOR)
+                    .arg(OBD_VERSION_MINOR)
+                    .arg(OBD_VERSION_COMMIT)
+                    .arg(OBD_AUTHOR_CONTACT);
+  QMessageBox::about(this, tr("About OBD"), verstring);
 }
 
 void MainWindow::createActions(void)

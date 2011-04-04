@@ -21,6 +21,7 @@
 #include <getopt.h>
 #include "whippleutils.h"
 #include "whipple.h"
+#include "OBDConfig.h"
 
 // Forward declaration
 void processOptions(int argc, char ** argv, steadyOpts_t * options, Whipple * bike);
@@ -34,7 +35,7 @@ int main(int argc, char ** argv)
   opt->outfolder[0] = '\0'; // Put results in current directory
   opt->all = false;         // Only calculate boundary curves by default
   opt->N = 1001;            // # of points to mesh steer in [0, pi]
-  
+
   // Process command line options
   processOptions(argc, argv, opt, bb);
 
@@ -49,7 +50,7 @@ int main(int argc, char ** argv)
   return 0;
 } // main
 
-void processOptions(int argc, char ** argv, 
+void processOptions(int argc, char ** argv,
                     steadyOpts_t * opt, Whipple * bike)
 {
   int c, option_index;
@@ -72,9 +73,11 @@ void processOptions(int argc, char ** argv,
 
     if (c == -1) //Detect the end of the options.
       break;
-    
+
     if (c == 'h') {
-      cout << 
+      cout <<
+argv[0] << " Version " << OBD_VERSION_MAJOR << "." << OBD_VERSION_MINOR <<
+" commit " << OBD_VERSION_COMMIT << "\n"
 "usage: " << argv[0] << " [OPTION]\n\n"
 "Mandatory arguments to long options are mandatory for short options too.\n\n"
 "  -h, --help                     display this help and exit\n"

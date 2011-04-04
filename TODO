@@ -1,3 +1,7 @@
--- Added steady turning code
 -- get python plotting library installed a proper location
 -- Add animation code
+-- GUI work:
+    -- parameter form
+    -- tab widget for eigenvalues, steady turning, animation
+    -- eigenvalue line plot
+    -- port animation code to work with QVTK widget

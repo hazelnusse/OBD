@@ -1,0 +1,15 @@
+#ifndef OBD_VERSION_MAJOR
+#define OBD_VERSION_MAJOR @OBD_VERSION_MAJOR@
+#endif
+
+#ifndef OBD_VERSION_MINOR
+#define OBD_VERSION_MINOR @OBD_VERSION_MINOR@
+#endif
+
+#ifndef OBD_VERSION_COMMIT
+#define OBD_VERSION_COMMIT @OBD_VERSION_COMMIT@
+#endif
+
+#ifndef OBD_AUTHOR_CONTACT
+#define OBD_AUTHOR_CONTACT "hazelnusse@gmail.com"
+#endif

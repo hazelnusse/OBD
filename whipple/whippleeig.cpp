@@ -20,6 +20,7 @@
 #include "gslVecUtils.h"
 #include "whipple.h"
 #include "whippleutils.h"
+#include "OBDConfig.h"
 
 // Structor to store the options
 typedef struct {
@@ -96,9 +97,11 @@ void processOptions(int argc, char ** argv, evalOptions * opt, Whipple * bike)
 
     if (c == -1) //Detect the end of the options.
       break;
-    
+
     if (c == 'h') {
-      cout << 
+      cout <<
+argv[0] << " Version " << OBD_VERSION_MAJOR << "." << OBD_VERSION_MINOR <<
+" commit " << OBD_VERSION_COMMIT << "\n"
 "usage: " << argv[0] << " [OPTION]\n\n"
 "Mandatory arguments to long options are mandatory for short options too.\n\n"
 "  -h, --help                         display this help and exit.\n"
@@ -107,7 +110,7 @@ void processOptions(int argc, char ** argv, evalOptions * opt, Whipple * bike)
 "  -g, --pitch_ig=FP_NUMBER           initial guess for the pitch root finder\n"
 "  -n, --points=201                   # of points to compute e-vals at\n"
 "  -i, --vi=0.0                       initial speed\n"
-"  -f, --vf=10.0                      final speed\n" 
+"  -f, --vf=10.0                      final speed\n"
 "  -o, --output=outputfile            write eigenvalues to outputfile\n\n";
       exit(0);
     } else if (c == 'm') {

@@ -21,6 +21,7 @@
 #include <getopt.h>
 #include "whippleutils.h"
 #include "whipple.h"
+#include "OBDConfig.h"
 
 // Forward declaration
 void processOptions(int argc, char ** argv, char * outfolder, Whipple * bike);
@@ -87,9 +88,11 @@ void processOptions(int argc, char ** argv, char * outfolder, Whipple * bike)
 
     if (c == -1) //Detect the end of the options.
       break;
-    
+
     if (c == 'h') {
-      cout << 
+      cout <<
+argv[0] << " Version " << OBD_VERSION_MAJOR << "." << OBD_VERSION_MINOR <<
+" commit " << OBD_VERSION_COMMIT << "\n"
 "usage: " << argv[0] << " [OPTION]\n\n"
 "Mandatory arguments to long options are mandatory for short options too.\n\n"
 "  -h, --help                         display this help and exit.\n"
@@ -146,7 +149,7 @@ void processOptions(int argc, char ** argv, char * outfolder, Whipple * bike)
       abort();
     }
   } // while()
-  
+
   if (verbose_flag) {
     bike->printParameters();
     bike->printState();
