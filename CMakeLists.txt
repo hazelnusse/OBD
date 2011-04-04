@@ -45,7 +45,6 @@ endif()
 
 if (obd_build_gui)
     find_package(Qt4 REQUIRED)
-    include(${QT_USE_FILE})
     add_subdirectory(bikegui)
 endif()
 
