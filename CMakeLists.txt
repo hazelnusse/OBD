@@ -32,10 +32,10 @@ string(REGEX REPLACE "([^ ]+).*"
        "\"\\1\"" OBD_VERSION_COMMIT
        ${OBD_VERSION_COMMIT})
 
-configure_file("${PROJECT_SOURCE_DIR}/OBDConfig.h.in"
-               "${PROJECT_BINARY_DIR}/OBDConfig.h")
+configure_file("${PROJECT_SOURCE_DIR}/include/OBDConfig.h.in"
+               "${PROJECT_BINARY_DIR}/include/OBDConfig.h")
 
-include_directories("${PROJECT_BINARY_DIR}")
+include_directories("${PROJECT_BINARY_DIR}/include")
 
 # Find GSL
 find_package(GSL REQUIRED)
@@ -55,5 +55,3 @@ endif()
 if (obd_build_tests)
     add_subdirectory(gtest)
 endif()
-
-#include(CPack)
