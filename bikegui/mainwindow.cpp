@@ -9,6 +9,7 @@ MainWindow::MainWindow()
   // Set MainWindow parameters
   setAnimated(true);
   setDockNestingEnabled(true);
+  setWindowTitle(tr("Open Bicycle Dynamics"));
 
   // Allocate space for a Whipple object
   bike = new Whipple();
