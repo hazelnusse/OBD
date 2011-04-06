@@ -1,26 +1,40 @@
 #include <QtGui>
+#include "parameters.h"
 #include "mainwindow.h"
 #include "OBDConfig.h"
-#include <iostream>
+#include "whipple.h"
 
 MainWindow::MainWindow()
 {
+  // Set MainWindow parameters
+  setAnimated(true);
+  setDockNestingEnabled(true);
+
+  // Allocate space for a Whipple object
+  bike = new Whipple();
+
+  // Set version string
+  versionString = QString(tr("Version %1.%2 commit %3"))
+              .arg(OBD_VERSION_MAJOR)
+              .arg(OBD_VERSION_MINOR)
+              .arg(OBD_VERSION_COMMIT);
+
+  // Set up Actions, Menus, Tabs, Docks
   createActions();
   createMenus();
+  createDockWindows();
+  createStatusBar();
+  createTabs();
 }
 
 void MainWindow::about(void)
 {
-  QString verstring = QString(tr(
-        "<h2>Open Bicycle Dynamics</h2>"
-        "Version %1.%2 commit %3"
-        "<p>Copyright &copy; 2010-2011 Dale Lukas Peterson"
-        "<p><a href=\"mailto:%4\">%4</a>"))
-                    .arg(OBD_VERSION_MAJOR)
-                    .arg(OBD_VERSION_MINOR)
-                    .arg(OBD_VERSION_COMMIT)
-                    .arg(OBD_AUTHOR_CONTACT);
-  QMessageBox::about(this, tr("About OBD"), verstring);
+  QString test = QString(tr("<h2>Open Bicycle Dynamics</h2>"
+        "%1"
+        "<p>Copyright &copy; 2010-2011 Dale Lukas Peterson</p>"
+        "<p><a href='mailto:%2'>%2</a>"))
+        .arg(versionString, OBD_AUTHOR_CONTACT);
+  QMessageBox::about(this, tr("About OBD"), test);
 }
 
 void MainWindow::createActions(void)
@@ -66,6 +80,16 @@ void MainWindow::createActions(void)
   connect(aboutQtAction, SIGNAL(triggered()), qApp, SLOT(aboutQt()));
 }
 
+void MainWindow::createDockWindows(void)
+{
+  QDockWidget *dock = new QDockWidget(tr("Parameters"));
+  dock->setAllowedAreas(Qt::RightDockWidgetArea | Qt::LeftDockWidgetArea);
+  addDockWidget(Qt::LeftDockWidgetArea, dock);
+  paramWidget = new WhippleParameter(dock);
+  dock->setWidget(paramWidget);
+
+}
+
 void MainWindow::createMenus(void)
 {
   // Add the file menu
@@ -82,4 +106,17 @@ void MainWindow::createMenus(void)
   // Add actions to help menu
   helpMenu->addAction(aboutAction);
   helpMenu->addAction(aboutQtAction);
+}
+
+void MainWindow::createStatusBar(void)
+{
+  statusBar()->showMessage(versionString);
+}
+void MainWindow::createTabs(void)
+{
+  tabWidget = new QTabWidget;
+  tabWidget->addTab(new QWidget, tr("Upright stability"));
+  tabWidget->addTab(new QWidget, tr("Steady turning"));
+  tabWidget->addTab(new QWidget, tr("Motion visualization"));
+  setCentralWidget(tabWidget);
 }
