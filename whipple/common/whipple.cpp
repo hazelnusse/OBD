@@ -360,10 +360,14 @@ bool Whipple::setParameters(WhippleParams * p)
     if (d_zero < minimumAxleOffset) {
       overlap[0] = true;
       cerr << "Tire overlap will occur when steer = 0\n";
+    } else {
+      overlap[0] = false;
     }
     if (d_pi < minimumAxleOffset) {
       overlap[1] = true;
       cerr << "Tire overlap will occur when steer = pi\n";
+    } else {
+      overlap[1] = false;
     }
     if (overlap[0] && overlap[1]) {
       validparameters = false;
