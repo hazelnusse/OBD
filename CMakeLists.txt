@@ -23,14 +23,23 @@ cmake_minimum_required(VERSION 2.8)
 
 set(OBD_VERSION_MAJOR 0)
 set(OBD_VERSION_MINOR 3)
-execute_process(COMMAND git log -1 --pretty=oneline
-                WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-                OUTPUT_VARIABLE OBD_VERSION_COMMIT)
 
-# Keep everything up to the first space, add quotes
-string(REGEX REPLACE "([^ ]+).*"
-       "\"\\1\"" OBD_VERSION_COMMIT
-       ${OBD_VERSION_COMMIT})
+# If we find git installed, set OBD_VERSION_COMMIT to most recent SHA1
+find_package(Git)
+if(GIT_FOUND)
+    # TODO:  check that ${PROJECT_SOURCE_DIR} has a .git folder to ensure it is
+    # a git repo rather than just a source tar-ball.
+    execute_process(COMMAND ${GIT_EXECUTABLE} log -1 --pretty=oneline
+                    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+                    OUTPUT_VARIABLE OBD_VERSION_COMMIT)
+
+    # Keep everything up to the first space, add quotes
+    string(REGEX REPLACE "([^ ]+).*"
+           "\"\\1\"" OBD_VERSION_COMMIT
+           ${OBD_VERSION_COMMIT})
+else()
+    set(OBD_VERSION_COMMIT "\"\"")
+endif()
 
 configure_file("${PROJECT_SOURCE_DIR}/include/OBDConfig.h.in"
                "${PROJECT_BINARY_DIR}/include/OBDConfig.h")
