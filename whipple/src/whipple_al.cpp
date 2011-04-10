@@ -16,7 +16,9 @@
  * this program; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
+
 #include "whipple.h"
+
 void Whipple::evalConstants(void)
 {
   z[40] = pow(lf,2) + pow(lr,2) + pow(ls,2) + pow(rr,2);
