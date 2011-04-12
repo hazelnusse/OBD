@@ -21,6 +21,13 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 project(OBD CXX C)
 cmake_minimum_required(VERSION 2.8)
 
+# Set g++ compiler flags if GNU C++ compiler is being used
+if(CMAKE_COMPILER_IS_GNUCXX)
+    set(CMAKE_CXX_FLAGS "-Wall")
+    set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
+    set(CMAKE_CXX_FLAGS_RELEASE "-O3")
+endif()
+
 set(OBD_VERSION_MAJOR 0)
 set(OBD_VERSION_MINOR 3)
 
