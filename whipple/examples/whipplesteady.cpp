@@ -1,17 +1,17 @@
 /* whipplesteady.cpp
- * 
- * Copyright (C) 2010 Dale Lukas Peterson
- * 
+ *
+ * Copyright (C) 2010-2011 Dale Lukas Peterson
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 3 of the License, or (at
  * your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
@@ -42,7 +42,7 @@ int main(int argc, char ** argv)
   // Make all the calculations requested
   bb->steadyCalcs(opt);
 
-  cout << "Steady turning analysis completed.  Steady turning output written to "
+  std::cout << "Steady turning analysis completed.  Steady turning output written to "
        << opt->outfolder << '\n';
   // Free memory, close files
   delete bb;
@@ -75,7 +75,7 @@ void processOptions(int argc, char ** argv,
       break;
 
     if (c == 'h') {
-      cout <<
+      std::cout <<
 argv[0] << " Version " << OBD_VERSION_MAJOR << "." << OBD_VERSION_MINOR <<
 " commit " << OBD_VERSION_COMMIT << "\n"
 "usage: " << argv[0] << " [OPTION]\n\n"
@@ -127,7 +127,7 @@ argv[0] << " Version " << OBD_VERSION_MAJOR << "." << OBD_VERSION_MINOR <<
     else if (c == 'v')  // verbose flag
       verbose_flag = true;
     else {
-      cout << "Invalid option.\n";
+      std::cout << "Invalid option.\n";
       abort();
     }
   } // while()

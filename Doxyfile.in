@@ -1,0 +1,8 @@
+PROJECT_NAME           = ${CPACK_PACKAGE_NAME}
+PROJECT_NUMBER         = ${VERSION}
+OUTPUT_DIRECTORY       = doc
+INPUT                  = ${PROJECT_SOURCE_DIR}/whipple/include
+                         ${PROJECT_SOURCE_DIR}/whipple/src
+                         ${PROJECT_SOURCE_DIR}/whipple/examples
+                         ${PROJECT_SOURCE_DIR}/whipple/tests
+                         ${PROJECT_SOURCE_DIR}/bikegui

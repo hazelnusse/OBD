@@ -33,6 +33,8 @@
  * point notation where one digit is to the left of the decimal place, and 15
  * are after it, along with the exponent.
  */
+
+#include <cmath>
 #include "whipple.h"
 #include "whippleutils.h"
 #include "gtest/gtest.h"
@@ -190,10 +192,10 @@ TEST(Whipple, Eigenvalues) {
                 <= 1e-14)
                );
         // Make sure they are of opposite sign
-        ASSERT_NE(signbit(GSL_REAL(gsl_vector_complex_get(bb->evals, 0))),
-                  signbit(GSL_REAL(gsl_vector_complex_get(bb->evals, 1))));
-        ASSERT_NE(signbit(GSL_REAL(gsl_vector_complex_get(bb->evals, 2))),
-                  signbit(GSL_REAL(gsl_vector_complex_get(bb->evals, 3))));
+        ASSERT_NE(std::signbit(GSL_REAL(gsl_vector_complex_get(bb->evals, 0))),
+                  std::signbit(GSL_REAL(gsl_vector_complex_get(bb->evals, 1))));
+        ASSERT_NE(std::signbit(GSL_REAL(gsl_vector_complex_get(bb->evals, 2))),
+                  std::signbit(GSL_REAL(gsl_vector_complex_get(bb->evals, 3))));
     } else {
       is_complex[0] = is_complex[1] = is_complex[2] = is_complex[3] = 0;
       N_real = N_complex = 0;

@@ -1,25 +1,27 @@
 /* whipple.cpp
- * 
+ *
  * Copyright (C) 2010 Dale Lukas Peterson
- * 
+ *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
  * Software Foundation; either version 3 of the License, or (at your option)
  * any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
  * more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License along with
  * this program; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
+
 #include "whipple.h"
 #include "whippleutils.h"
 #define GSL_RANGE_CHECK_OFF
 #define HAVE_INLINE
+
 int eomwrapper(double t, const double x[10], double f[10], void * params)
 {
   Whipple * p = (Whipple *) params;
@@ -67,106 +69,10 @@ void hc_fdf(double q2, void * params, double * f, double * df)
   *df =  hc_df(q2, params);
 } // hc_fdf()
 
-ostream &operator<<(ostream &file, const Whipple * discs)
-{
-  file.write((char *) &(discs->t), sizeof discs->t);
-  file.write((char *) &discs->q0, sizeof discs->q0);
-  file.write((char *) &discs->q1, sizeof discs->q1);
-  file.write((char *) &discs->q2, sizeof discs->q2);
-  file.write((char *) &discs->q3, sizeof discs->q3);
-  file.write((char *) &discs->q4, sizeof discs->q4);
-  file.write((char *) &discs->q5, sizeof discs->q5);
-  file.write((char *) &discs->q6, sizeof discs->q6);
-  file.write((char *) &discs->q7, sizeof discs->q7);
-  file.write((char *) &discs->u0, sizeof discs->u0);
-  file.write((char *) &discs->u1, sizeof discs->u1);
-  file.write((char *) &discs->u2, sizeof discs->u2);
-  file.write((char *) &discs->u3, sizeof discs->u3);
-  file.write((char *) &discs->u4, sizeof discs->u4);
-  file.write((char *) &discs->u5, sizeof discs->u5);
-  file.write((char *) discs->no_fn, sizeof discs->no_fn);
-  file.write((char *) &discs->Rx, sizeof discs->Rx);
-  file.write((char *) &discs->Ry, sizeof discs->Ry);
-  file.write((char *) &discs->Rz, sizeof discs->Rz);
-  file.write((char *) &discs->Fx, sizeof discs->Fx);
-  file.write((char *) &discs->Fy, sizeof discs->Fy);
-  file.write((char *) &discs->Fz, sizeof discs->Fz);
-  file.write((char *) &discs->ke, sizeof discs->ke);
-  file.write((char *) &discs->pe, sizeof discs->pe);
-  file.write((char *) &discs->fa_yaw, sizeof discs->fa_yaw);
-  file.write((char *) &discs->fa_lean, sizeof discs->fa_lean);
-  file.write((char *) &discs->fa_pitch, sizeof discs->fa_pitch);
-  file.write((char *) discs->constraints, sizeof discs->constraints);
-  return file;
-} // ostream &operator<<()
-
-void Whipple::writeSimRecord_dt(const char * filename) const
-{
-  ofstream fp(filename, ios::out);
-  if (fp.is_open()) {
-    fp << "import numpy as np\n";
-    fp << "sim_dt = np.dtype([('t', np.float64),\n"
-          "                   ('q0', np.float64),\n"
-          "                   ('q1', np.float64),\n"
-          "                   ('q2', np.float64),\n"
-          "                   ('q3', np.float64),\n"
-          "                   ('q4', np.float64),\n"
-          "                   ('q5', np.float64),\n"
-          "                   ('q6', np.float64),\n"
-          "                   ('q7', np.float64),\n"
-          "                   ('u0', np.float64),\n"
-          "                   ('u1', np.float64),\n"
-          "                   ('u2', np.float64),\n"
-          "                   ('u3', np.float64),\n"
-          "                   ('u4', np.float64),\n"
-          "                   ('u5', np.float64),\n"
-          "                   ('fnx', np.float64),\n"
-          "                   ('fny', np.float64),\n"
-          "                   ('fnz', np.float64),\n"
-          "                   ('Rx', np.float64),\n"
-          "                   ('Ry', np.float64),\n"
-          "                   ('Rz', np.float64),\n"
-          "                   ('Fx', np.float64),\n"
-          "                   ('Fy', np.float64),\n"
-          "                   ('Fz', np.float64),\n"
-          "                   ('ke', np.float64),\n"
-          "                   ('pe', np.float64),\n"
-          "                   ('fa_yaw', np.float64),\n"
-          "                   ('fa_lean', np.float64),\n"
-          "                   ('fa_pitch', np.float64),\n"
-          "                   ('nh1', np.float64),\n"
-          "                   ('nh2', np.float64),\n"
-          "                   ('nh3', np.float64)])";
-    fp.close();
-  } else {
-    cerr << "Unable to open " << filename << "for writing.\n";
-    cerr << "Aborting.\n";
-    exit(0);
-  }
-} // writeSimRecord_dt()
-
-void Whipple::writeEvalRecord_dt(const char * filename) const
-{
-  ofstream fp(filename, ios::out);
-  if (fp.is_open()) {
-    fp << "import numpy as np\n";
-    fp << "eval_dt = np.dtype([('v', np.float64),\n"
-          "                    ('lambda1', np.float64),\n"
-          "                    ('lambda2', np.float64),\n"
-          "                    ('lambda3', np.float64),\n"
-          "                    ('lambda4', np.float64)])\n";
-    fp.close();
-  } else {
-    cerr << "Unable to open " << filename << "for writing.\n";
-    cerr << "Aborting.\n";
-    exit(0);
-  }
-} // writeEvalRecord_dt()
-
 void Whipple::printState(void) const
 {
-  cout.precision(16);
-  cout << "q0 = " << q0 << " (ignorable)\n"
+  std::cout.precision(16);
+  std::cout << "q0 = " << q0 << " (ignorable)\n"
        << "q1 = " << q1 << '\n'
        << "q2 = " << q2 << " (dependent)\n"
        << "q3 = " << q3 << '\n'
@@ -177,15 +83,15 @@ void Whipple::printState(void) const
        << "u0 = " << u0 << " (dependent)\n"
        << "u1 = " << u1 << '\n'
        << "u2 = " << u2 << " (dependent)\n"
-       << "u3 = " << u3 << endl
+       << "u3 = " << u3 << '\n'
        << "u4 = " << u4 << " (dependent)\n"
-       << "u5 = " << u5 << endl;
+       << "u5 = " << u5 << '\n';
 } // printState()
 
 void Whipple::printParameters(void) const
 {
-  cout.precision(16);
-  cout << "rr   = " << rr
+  std::cout.precision(16);
+  std::cout << "rr   = " << rr
        << "\nrrt  = " << rrt
        << "\nrf   = " << rf
        << "\nrft  = " << rft
@@ -213,62 +119,62 @@ void Whipple::printParameters(void) const
 
 void Whipple::writeState(const char * filename) const
 {
-  ofstream fp(filename, ios::out);
+  std::ofstream fp(filename, std::ios::out);
   fp.precision(16);
   if (fp.is_open()) {
-  fp << "q0 = " << q0 << " (ignorable coordinate)" << endl
-     << "q1 = " << q1 << endl
-     << "q2 = " << q2 << " (dependent coordinate)" << endl
-     << "q3 = " << q3 << endl
-     << "q4 = " << q4 << " (ignorable coordinate)" << endl
-     << "q5 = " << q5 << " (ignorable coordinate)" << endl
-     << "q6 = " << q6 << " (ignorable coordinate)" << endl
-     << "q7 = " << q7 << " (ignorable coordinate)" << endl
-     << "u0 = " << u0 << " (dependent speed)" << endl
-     << "u1 = " << u1 << endl
-     << "u2 = " << u2 << " (dependent speed)" << endl
-     << "u3 = " << u3 << endl
-     << "u4 = " << u4 << " (dependent speed)" << endl
-     << "u5 = " << u5 << endl;
+  fp << "q0 = " << q0 << " (ignorable coordinate)" << '\n'
+     << "q1 = " << q1 << '\n'
+     << "q2 = " << q2 << " (dependent coordinate)" << '\n'
+     << "q3 = " << q3 << '\n'
+     << "q4 = " << q4 << " (ignorable coordinate)" << '\n'
+     << "q5 = " << q5 << " (ignorable coordinate)" << '\n'
+     << "q6 = " << q6 << " (ignorable coordinate)" << '\n'
+     << "q7 = " << q7 << " (ignorable coordinate)" << '\n'
+     << "u0 = " << u0 << " (dependent speed)" << '\n'
+     << "u1 = " << u1 << '\n'
+     << "u2 = " << u2 << " (dependent speed)" << '\n'
+     << "u3 = " << u3 << '\n'
+     << "u4 = " << u4 << " (dependent speed)" << '\n'
+     << "u5 = " << u5 << '\n';
   } else {
-    cerr << "Unable to open " << filename << "for writing." << endl;
-    cerr << "Aborting." << endl;
+    std::cerr << "Unable to open " << filename << "for writing." << '\n';
+    std::cerr << "Aborting." << '\n';
     exit(0);
   }
 } // writeState()
 
 void Whipple::writeParameters(const char * filename) const
 {
-  ofstream fp(filename, ios::out);
+  std::ofstream fp(filename, std::ios::out);
   fp.precision(16);
   if (fp.is_open()) {
-  fp << "rr   = " << rr << endl
-     << "rrt  = " << rrt << endl
-     << "rf   = " << rf << endl
-     << "rft  = " << rft << endl
-     << "lr   = " << lr << endl
-     << "ls   = " << ls << endl
-     << "lf   = " << lf << endl
-     << "mr   = " << mr << endl
-     << "mf   = " << mf << endl
-     << "ICyy = " << ICyy << endl
-     << "IDxx = " << IDxx << endl
-     << "IDyy = " << IDyy << endl
-     << "IDzz = " << IDzz << endl
-     << "IDxz = " << IDxz << endl
-     << "IExx = " << IExx << endl
-     << "IEyy = " << IEyy << endl
-     << "IEzz = " << IEzz << endl
-     << "IExz = " << IExz << endl
-     << "IFyy = " << IFyy << endl
-     << "lrx  = " << lrx << endl
-     << "lrz  = " << lrz << endl
-     << "lfx  = " << lfx << endl
-     << "lfz  = " << lfz << endl
-     << "g    = " << g << endl;
+  fp << "rr   = " << rr << '\n'
+     << "rrt  = " << rrt << '\n'
+     << "rf   = " << rf << '\n'
+     << "rft  = " << rft << '\n'
+     << "lr   = " << lr << '\n'
+     << "ls   = " << ls << '\n'
+     << "lf   = " << lf << '\n'
+     << "mr   = " << mr << '\n'
+     << "mf   = " << mf << '\n'
+     << "ICyy = " << ICyy << '\n'
+     << "IDxx = " << IDxx << '\n'
+     << "IDyy = " << IDyy << '\n'
+     << "IDzz = " << IDzz << '\n'
+     << "IDxz = " << IDxz << '\n'
+     << "IExx = " << IExx << '\n'
+     << "IEyy = " << IEyy << '\n'
+     << "IEzz = " << IEzz << '\n'
+     << "IExz = " << IExz << '\n'
+     << "IFyy = " << IFyy << '\n'
+     << "lrx  = " << lrx << '\n'
+     << "lrz  = " << lrz << '\n'
+     << "lfx  = " << lfx << '\n'
+     << "lfz  = " << lfz << '\n'
+     << "g    = " << g << '\n';
   } else {
-    cerr << "Unable to open " << filename << "for writing." << endl;
-    cerr << "Aborting." << endl;
+    std::cerr << "Unable to open " << filename << "for writing." << '\n';
+    std::cerr << "Aborting." << '\n';
     exit(0);
   }
 } // writeParameters()
@@ -323,31 +229,31 @@ bool Whipple::setParameters(WhippleParams * p)
 
   // Check that distances are non-negative
   if (p->rr < 0.0) {
-    cerr << "rr must be greater than or equal to zero.\n";
+    std::cerr << "rr must be greater than or equal to zero.\n";
     validparameters = false;
   }
   if (p->rf < 0.0) {
-    cerr << "rf must be greater than or equal to zero.\n";
+    std::cerr << "rf must be greater than or equal to zero.\n";
     validparameters = false;
   }
   if (p->rrt < 0.0) {
-    cerr << "rrt must be greater than or equal to zero.\n";
+    std::cerr << "rrt must be greater than or equal to zero.\n";
     validparameters = false;
   }
   if (p->rft < 0.0) {
-    cerr << "rft must be greater than or equal to zero.\n";
+    std::cerr << "rft must be greater than or equal to zero.\n";
     validparameters = false;
   }
   if (p->lr < 0.0) {
-    cerr << "lr must be greater than or equal to zero.\n";
+    std::cerr << "lr must be greater than or equal to zero.\n";
     validparameters = false;
   }
   if (p->ls < 0.0) {
-    cerr << "ls must be greater than or equal to zero.\n";
+    std::cerr << "ls must be greater than or equal to zero.\n";
     validparameters = false;
   }
   if (p->lf < 0.0) {
-    cerr << "lf must be greater than or equal to zero.\n";
+    std::cerr << "lf must be greater than or equal to zero.\n";
     validparameters = false;
   }
 
@@ -359,30 +265,30 @@ bool Whipple::setParameters(WhippleParams * p)
 
     if (d_zero < minimumAxleOffset) {
       overlap[0] = true;
-      cerr << "Tire overlap will occur when steer = 0\n";
+      std::cerr << "Tire overlap will occur when steer = 0\n";
     } else {
       overlap[0] = false;
     }
     if (d_pi < minimumAxleOffset) {
       overlap[1] = true;
-      cerr << "Tire overlap will occur when steer = pi\n";
+      std::cerr << "Tire overlap will occur when steer = pi\n";
     } else {
       overlap[1] = false;
     }
     if (overlap[0] && overlap[1]) {
       validparameters = false;
-      cerr << "Tire overlap occurs for steer = 0 and steer = pi,"
+      std::cerr << "Tire overlap occurs for steer = 0 and steer = pi,"
               "non realistic model.\n";
     }
   }
 
   // Check that masses are non-negative
   if (p->mr < 0.0) {
-    cerr << "mr must be greater than or equal to zero.\n";
+    std::cerr << "mr must be greater than or equal to zero.\n";
     validparameters = false;
   }
   if (p->mf < 0.0) {
-    cerr << "mf must be greater than or equal to zero.\n";
+    std::cerr << "mf must be greater than or equal to zero.\n";
     validparameters = false;
   }
 
@@ -391,22 +297,22 @@ bool Whipple::setParameters(WhippleParams * p)
 
   // Rear wheel
   if (p->ICyy < 0.0) {
-    cerr << "Rear wheel spin inertia must be non-negative.\n";
+    std::cerr << "Rear wheel spin inertia must be non-negative.\n";
     validparameters = false;
   }
   // Front wheel
   if (p->IFyy < 0.0) {
-    cerr << "Front wheel spin inertia must be non-negative.\n";
+    std::cerr << "Front wheel spin inertia must be non-negative.\n";
     validparameters = false;
   }
   // Rear assembly
   if (!validInertia(p->IDxx, p->IDyy, p->IDzz, p->IDxz)) {
-    cerr << "Rear assembly inertia invalid.\n";
+    std::cerr << "Rear assembly inertia invalid.\n";
     validparameters = false;
   }
   // Front assembly
   if (!validInertia(p->IDxx, p->IDyy, p->IDzz, p->IDxz)) {
-    cerr << "Rear assembly inertia invalid.\n";
+    std::cerr << "Rear assembly inertia invalid.\n";
     validparameters = false;
   }
 
@@ -620,7 +526,7 @@ void Whipple::evolve(double tj, double * state)
 
 void Whipple::printEvals(void) const
 {
-  cout << "evals:\n";
+  std::cout << "evals:\n";
   gsl_vector_complex_fprintf(stdout, evals, "%+0.16g");
 }
 
@@ -638,21 +544,21 @@ bool Whipple::validInertia(double Ixx, double Iyy, double Izz, double Ixz) const
 
   for (int i = 0; i < 3; ++i) {
     if (I[i] < 0.0) {
-      cerr << "I" << i+1 << " is negative.\n";
+      std::cerr << "I" << i+1 << " is negative.\n";
       isvalid = false;
     }
   } // for i
 
   if (I[0] > I[1] + I[2]) {
-    cerr << "Inertia inequality not satsified: I1 > I2 + I3\n";
+    std::cerr << "Inertia inequality not satsified: I1 > I2 + I3\n";
     isvalid = false;
   }
   if (I[1] > I[0] + I[2]) {
-    cerr << "Inertia inequality not satsified: I2 > I1 + I3\n";
+    std::cerr << "Inertia inequality not satsified: I2 > I1 + I3\n";
     isvalid = false;
   }
   if (I[2] > I[0] + I[1]) {
-    cerr << "Inertia inequality not satsified: I3 > I1 + I2\n";
+    std::cerr << "Inertia inequality not satsified: I3 > I1 + I2\n";
     isvalid = false;
   }
 

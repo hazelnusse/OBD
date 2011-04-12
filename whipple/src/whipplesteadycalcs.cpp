@@ -22,7 +22,7 @@
 
 static void writeBndryRecord_dt(const char * filename)
 {
-  ofstream fp(filename, ios::out);
+  std::ofstream fp(filename, std::ios::out);
   if (fp.is_open()) {
     fp << "import numpy as np\n"
           "boundary_dt = np.dtype([('q3', np.float64),\n"
@@ -36,15 +36,15 @@ static void writeBndryRecord_dt(const char * filename)
           "                        ('q2_max', np.float64)])\n";
     fp.close();
   } else {
-    cerr << "Unable to open " << filename << "for writing.\n";
-    cerr << "Aborting.\n";
+    std::cerr << "Unable to open " << filename << "for writing.\n";
+    std::cerr << "Aborting.\n";
     exit(0);
   }
 } // writeBndryRecord_dt()
 
 static void writeiso_velRecord_dt(const char * filename, size_t N)
 {
-  ofstream fp(filename, ios::out);
+  std::ofstream fp(filename, std::ios::out);
   if (fp.is_open()) {
     fp << "import numpy as np\n";
     fp << "iso_v_dt = np.dtype([('q3', np.float64),\n";
@@ -61,8 +61,8 @@ static void writeiso_velRecord_dt(const char * filename, size_t N)
     fp << "N_iso_v = " << char(N + 48) << '\n';
     fp.close();
   } else {
-    cerr << "Unable to open " << filename << "for writing.\n";
-    cerr << "Aborting.\n";
+    std::cerr << "Unable to open " << filename << "for writing.\n";
+    std::cerr << "Aborting.\n";
     exit(0);
   }
 } // writeiso_velRecord_dt()
@@ -81,7 +81,7 @@ void Whipple::steadyCalcs(steadyOpts_t * opt)
 {
   double delta = M_PI / double (opt->N - 1);
   int ig_index;
-  string filename;
+  std::string filename;
   gsl_matrix * M = gsl_matrix_alloc(opt->N, 9);
   gsl_vector * steer = &(gsl_matrix_column(M, 0).vector);
   for (int i = 0; i < opt->N; ++i)
@@ -626,10 +626,10 @@ static void cv(gsl_vector * lean, gsl_vector * pitch,
 static void iterateError(int status, const char * routine, double steer)
 {
   if (status == GSL_EBADFUNC)
-    cerr << "GSL_EBADFUN";
+    std::cerr << "GSL_EBADFUN";
   else if (status == GSL_ENOPROG)
-    cerr << "GSL_ENOPROG";
-  cerr << " encountered in " << routine << " at steer " << steer <<
+    std::cerr << "GSL_ENOPROG";
+  std::cerr << " encountered in " << routine << " at steer " << steer <<
           ".  Aborting.\n";
   abort();
 }
@@ -637,9 +637,9 @@ static void iterateError(int status, const char * routine, double steer)
 static void increaseftol(double * ftol, int * i, int iter_max,
                          const char * routine, double steer)
 {
-  cerr << "Max iterations (" << iter_max << ") encountered in " << routine <<
+  std::cerr << "Max iterations (" << iter_max << ") encountered in " << routine <<
           " at steer = " << steer << "\nIncreasing ftol from " << *ftol << " to ";
   (*ftol) = (*ftol) * 10.0;
   (*i) = (*i) - 1;
-  cerr << *ftol << '\n';
+  std::cerr << *ftol << '\n';
 } // increaseftol()

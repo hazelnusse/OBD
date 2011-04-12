@@ -31,16 +31,16 @@ int main(void)
 
       if (bb->u5s_s < 0.0)
         continue;
-      
+
       u5 = -sqrt(bb->u5s_s);
 
       // set state to positive rotation rate, compute e-vals
       bb->u5 = u5;
       bb->calcEvals();
-      cout.precision(16);
+      std::cout.precision(16);
       if (stable(bb->evals)) {
         if (bb->Ts_s >= 0.0) {
-          cout << "Stable:\nlean = " << lean << "\n"
+          std::cout << "Stable:\nlean = " << lean << "\n"
                << "steer = " <<  steer << "\n"
                << "steer torque = " << bb->Ts_s << "\n"
                << "speed = " << -u5*bb->rf << "\n";

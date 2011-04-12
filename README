@@ -52,3 +52,12 @@ should be coming soon.
 After running cmake (or cmake-gui), type:
 
     $ make test
+
+4. Building Documentation
+-------------------------
+If you have Doxygen installed, you can build html and LaTeX documentation by
+typing:
+
+    $ make doc
+
+The resulting documentation will be in the doc/ folder

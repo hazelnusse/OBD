@@ -61,6 +61,15 @@ add_subdirectory(whipple)
 
 if (obd_build_docs)
     find_package(Doxygen)
+    if (DOXYGEN_FOUND STREQUAL "NO")
+        message(FATAL_ERROR "Doxygen not found. Please get a copy http://www.doxygen.org")
+    endif()
+    # prepare doxygen configuration file
+    configure_file(${PROJECT_SOURCE_DIR}/Doxyfile.in
+                   ${PROJECT_BINARY_DIR}/Doxyfile)
+    add_custom_target(doc
+                      ${DOXYGEN_EXECUTABLE}
+                      ${PROJECT_BINARY_DIR}/Doxyfile)
 endif()
 
 if (obd_build_gui)

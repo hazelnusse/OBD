@@ -1,17 +1,17 @@
 /* whippleutils.cpp
- * 
- * Copyright (C) 2010 Dale Lukas Peterson
- * 
+ *
+ * Copyright (C) 2010-2011 Dale Lukas Peterson
+ *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
  * Software Foundation; either version 3 of the License, or (at your option)
  * any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
  * more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License along with
  * this program; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
@@ -116,7 +116,7 @@ void setBenchmarkParameters(MJWhippleParams * bike)
 
 void readMJWhippleParams(MJWhippleParams *mjbike, const char *filename)
 {
-  ifstream fp(filename);
+  std::ifstream fp(filename);
   char line[256];
   char *param, *valc;
   double val;
@@ -125,25 +125,25 @@ void readMJWhippleParams(MJWhippleParams *mjbike, const char *filename)
     for (fp.getline(line, 255); fp.good(); fp.getline(line, 255)) {
       if (line[0] == '%' || line[0] == '#' || line[0] == '\n')
         continue;
-    
+
       // Get the parameter name
       param = strtok(line, "=");
       if (param == NULL) {
-        cerr <<
-"File read error parsing parameter name." << endl <<
-"Ensure file is formatted with lines like: " << endl << 
-"'rr=0.30', exluding the single quotes, and no spaces anywhere." << endl <<
-"Exiting." << endl;
+        std::cerr <<
+"File read error parsing parameter name." << '\n' <<
+"Ensure file is formatted with lines like: " << '\n' <<
+"'rr=0.30', exluding the single quotes, and no spaces anywhere." << '\n' <<
+"Exiting." << '\n';
         exit(0);
       } // if
       // Get the value of the parameter
       valc = strtok(NULL, "\n");
       if (valc == NULL) {
-        cerr <<
-"File read error parsing parameter value." << endl <<
-"Ensure file is formatted with lines like: " << endl << 
-"'rr=0.30', exluding the single quotes, and no spaces anywhere." << endl <<
-"Exiting." << endl;
+        std::cerr <<
+"File read error parsing parameter value." << '\n' <<
+"Ensure file is formatted with lines like: " << '\n' <<
+"'rr=0.30', exluding the single quotes, and no spaces anywhere." << '\n' <<
+"Exiting." << '\n';
         exit(0);
       } // if
       val = atof(valc);  // Convert string to double
@@ -206,7 +206,8 @@ void readMJWhippleParams(MJWhippleParams *mjbike, const char *filename)
         mjbike->g = val;
     } // for
   } else {
-    cerr << "Unable to open " << filename << ". Exiting." << endl;
+    std::cerr << "Unable to open " << filename << ". Exiting."
+      << std::endl;
     exit(0);
   } // if
   fp.close();
@@ -214,7 +215,7 @@ void readMJWhippleParams(MJWhippleParams *mjbike, const char *filename)
 
 void readWhippleParams(WhippleParams * bike, const char *filename)
 {
-  ifstream fp(filename);
+  std::ifstream fp(filename);
   char line[256];
   char *param, *valc;
   double val;
@@ -223,25 +224,25 @@ void readWhippleParams(WhippleParams * bike, const char *filename)
     for (fp.getline(line, 255); fp.good(); fp.getline(line, 255)) {
       if (line[0] == '%' || line[0] == '#' || line[0] == '\n')
         continue;
-    
+
       // Get the parameter name
       param = strtok(line, "=");
       if (param == NULL) {
-        cerr <<
-"File read error parsing parameter name." << endl <<
-"Ensure file is formatted with lines like: " << endl << 
-"'rr=0.30', exluding the single quotes, and no spaces anywhere." << endl <<
-"Exiting." << endl;
+        std::cerr <<
+"File read error parsing parameter name." << '\n' <<
+"Ensure file is formatted with lines like: " << '\n' <<
+"'rr=0.30', exluding the single quotes, and no spaces anywhere." << '\n' <<
+"Exiting." << '\n';
         exit(0);
       } // if
       // Get the value of the parameter
       valc = strtok(NULL, "\n");
       if (valc == NULL) {
-        cerr <<
-"File read error parsing parameter value." << endl <<
-"Ensure file is formatted with lines like: " << endl << 
-"'rr=0.30', exluding the single quotes, and no spaces anywhere." << endl <<
-"Exiting." << endl;
+        std::cerr <<
+"File read error parsing parameter value." << '\n' <<
+"Ensure file is formatted with lines like: " << '\n' <<
+"'rr=0.30', exluding the single quotes, and no spaces anywhere." << '\n' <<
+"Exiting." << '\n';
         exit(0);
       } // if
       val = atof(valc);  // Convert string to double
@@ -296,7 +297,7 @@ void readWhippleParams(WhippleParams * bike, const char *filename)
       bike->g = val;
     } // for
   } else {
-    cerr << "Unable to open " << filename << ". Exiting." << endl;
+    std::cerr << "Unable to open " << filename << ". Exiting." << '\n';
     exit(0);
   } // if
   fp.close();
@@ -304,7 +305,7 @@ void readWhippleParams(WhippleParams * bike, const char *filename)
 
 void readState(double * state, const char *filename)
 {
-  ifstream fp(filename);
+  std::ifstream fp(filename);
   char line[256];
   char *param, *valc;
   double val;
@@ -313,25 +314,25 @@ void readState(double * state, const char *filename)
     for (fp.getline(line, 255); fp.good(); fp.getline(line, 255)) {
       if (line[0] == '%' || line[0] == '#' || line[0] == '\n')
         continue;
-    
+
       // Get the parameter name
       param = strtok(line, "=");
       if (param == NULL) {
-        cerr <<
-"File read error parsing parameter name." << endl <<
-"Ensure file is formatted with lines like: " << endl << 
-"'rr=0.30', exluding the single quotes, and no spaces anywhere." << endl <<
-"Exiting." << endl;
+        std::cerr <<
+"File read error parsing parameter name." << '\n' <<
+"Ensure file is formatted with lines like: " << '\n' <<
+"'rr=0.30', exluding the single quotes, and no spaces anywhere." << '\n' <<
+"Exiting." << '\n';
         exit(0);
       } // if
       // Get the value of the parameter
       valc = strtok(NULL, "\n");
       if (valc == NULL) {
-        cerr <<
-"File read error parsing parameter value." << endl <<
-"Ensure file is formatted with lines like: " << endl << 
-"'rr=0.30', exluding the single quotes, and no spaces anywhere." << endl <<
-"Exiting." << endl;
+        std::cerr <<
+"File read error parsing parameter value." << '\n' <<
+"Ensure file is formatted with lines like: " << '\n' <<
+"'rr=0.30', exluding the single quotes, and no spaces anywhere." << '\n' <<
+"Exiting." << '\n';
         exit(0);
       } // if
       val = atof(valc);  // Convert string to double
@@ -356,7 +357,7 @@ void readState(double * state, const char *filename)
         state[8] = val;
       else if (strcmp(param, "fwrate") == 0)
         state[9] = val;
-    } // for 
+    } // for
   } // if
 
   fp.close();

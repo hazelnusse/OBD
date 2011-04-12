@@ -1,17 +1,17 @@
 /* whippleeig.cpp
- * 
- * Copyright (C) 2010 Dale Lukas Peterson
- * 
+ *
+ * Copyright (C) 2010-2011 Dale Lukas Peterson
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 3 of the License, or (at
  * your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
@@ -31,11 +31,12 @@ typedef struct {
 
 // Forward declaration
 void processOptions(int argc, char ** argv, evalOptions * opt , Whipple * bike);
+void writeEvalRecord_dt(const char * filename);
 
 int main(int argc, char ** argv)
 {
   Whipple * bb = new Whipple();
-  string filename;
+  std::string filename;
 
   evalOptions * opt = new evalOptions;
   // default parameters
@@ -50,10 +51,10 @@ int main(int argc, char ** argv)
   bb->writeParameters(filename.c_str());
   // Write data record file.
   filename = opt->outfolder; filename += "eval_record.py";
-  bb->writeEvalRecord_dt(filename.c_str());
+  writeEvalRecord_dt(filename.c_str());
   // Open data file
   filename = opt->outfolder; filename += "eigenvalues.dat";
-  ofstream OutputFile(filename.c_str(), ios::binary);
+  std::ofstream OutputFile(filename.c_str(), std::ios::binary);
 
   // Vector to store range of speeds to calculate eigenvalues
   gsl_vector * speed = linspaceN(opt->vi, opt->vf, opt->N);
@@ -68,7 +69,7 @@ int main(int argc, char ** argv)
     OutputFile.write((char *) gsl_vector_ptr(speed, i), sizeof(double));
     OutputFile.write((char *) bb->fourValues, 4*sizeof(double));
   } // for i
-  cout << "Eigenvalue data written to " << opt->outfolder << endl;
+  std::cout << "Eigenvalue data written to " << opt->outfolder << '\n';
 
   // Close files and free memory
   OutputFile.close();
@@ -99,7 +100,7 @@ void processOptions(int argc, char ** argv, evalOptions * opt, Whipple * bike)
       break;
 
     if (c == 'h') {
-      cout <<
+      std::cout <<
 argv[0] << " Version " << OBD_VERSION_MAJOR << "." << OBD_VERSION_MINOR <<
 " commit " << OBD_VERSION_COMMIT << "\n"
 "usage: " << argv[0] << " [OPTION]\n\n"
@@ -146,8 +147,26 @@ argv[0] << " Version " << OBD_VERSION_MAJOR << "." << OBD_VERSION_MINOR <<
     else if (c == 'o')
       strcpy(opt->outfolder, optarg);
     else {
-      cout << "Invalid option." << endl;
+      std::cout << "Invalid option." << '\n';
       abort();
     }
   } // while()
 } // processOptions()
+
+void writeEvalRecord_dt(const char * filename)
+{
+  std::ofstream fp(filename, std::ios::out);
+  if (fp.is_open()) {
+    fp << "import numpy as np\n";
+    fp << "eval_dt = np.dtype([('v', np.float64),\n"
+          "                    ('lambda1', np.float64),\n"
+          "                    ('lambda2', np.float64),\n"
+          "                    ('lambda3', np.float64),\n"
+          "                    ('lambda4', np.float64)])\n";
+    fp.close();
+  } else {
+    std::cerr << "Unable to open " << filename << "for writing.\n";
+    std::cerr << "Aborting.\n";
+    exit(0);
+  }
+} // writeEvalRecord_dt()

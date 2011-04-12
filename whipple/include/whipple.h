@@ -31,8 +31,6 @@
 #define Z_MAX 987
 #define ZS_MAX 652
 
-using namespace std;
-
 extern "C" {
   inline int eomwrapper(double t, const double x[10], double f[10], void * params);
 }
@@ -127,6 +125,17 @@ class Whipple {
     void calcPitch(void);
     void computeOutputs(void);
     void eoms(void);
+
+    /**
+     * Method for evaluating z's which are constant with respect to the bicycle
+     * state.
+     *
+     * @pre Physical parameters of bicycle model must be set.
+     *
+     * @post z's which are constant with respect to the bicycle state are evaluated.
+     *
+     * @return None
+     * */
     void evalConstants(void);
     void evolve(double tj, double * state);
     void getFourValues(void);
@@ -142,8 +151,7 @@ class Whipple {
     void steadyCalcs(steadyOpts_t * options);
 
     // Accessors
-    void writeEvalRecord_dt(const char * filename) const;
-    void writeSimRecord_dt(const char * filename) const;
+    //void writeEvalRecord_dt(const char * filename) const;
     void writeParameters(const char * filename) const;
     void writeState(const char * filename) const;
     void printState(void) const;
@@ -156,7 +164,7 @@ class Whipple {
     friend double hc_f(double q2, void * params);
     friend double hc_df(double q2, void * params);
     friend void hc_fdf(double q2, void * params, double * f, double * df);
-    friend ostream &operator<<(ostream &file, const Whipple * discs);
+    // friend ostream &operator<<(ostream &file, const Whipple * discs);
 
   private:
     bool validInertia(double Ixx, double Iyy, double Izz, double Ixz) const;

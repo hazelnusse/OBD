@@ -1,21 +1,22 @@
 /* whipplesim.cpp
- * 
+ *
  * Copyright (C) 2010 Dale Lukas Peterson
- * 
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 3 of the License, or (at
  * your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
+
 #include <iostream>
 #include <string>
 #include <getopt.h>
@@ -23,14 +24,19 @@
 #include "whipple.h"
 #include "OBDConfig.h"
 
-// Forward declaration
-void processOptions(int argc, char ** argv, char * outfolder, Whipple * bike);
+// Forward declarations
+void processOptions(int argc,
+                    char ** argv,
+                    char * outfolder,
+                    Whipple * bike);
+std::ostream &operator<<(std::ostream &outfile, const Whipple * discs);
+void writeSimRecord_dt(const char * filename);
 
 int main(int argc, char ** argv)
 {
   Whipple * bb = new Whipple();
   char outfolder[512] = "";
-  string filename;
+  std::string filename;
 
   // Process command line options
   processOptions(argc, argv, outfolder, bb);
@@ -38,12 +44,14 @@ int main(int argc, char ** argv)
   // Write parameters
   filename = outfolder; filename += "simulation_parameters.txt";
   bb->writeParameters(filename.c_str());
+
   // Write data record file.
   filename = outfolder; filename += "sim_record.py";
-  bb->writeSimRecord_dt(filename.c_str());
+  writeSimRecord_dt(filename.c_str());
+
   // Open data file
   filename = outfolder; filename += "simulation.dat";
-  ofstream OutputFile(filename.c_str(), ios::binary);
+  std::ofstream OutputFile(filename.c_str(), std::ios::binary);
 
   // Write initial conditions
   OutputFile << bb;
@@ -62,11 +70,14 @@ int main(int argc, char ** argv)
   // Free memory, close files
   delete bb;
   OutputFile.close();
-  cout << "Simulation completed.  Simulation output written to "
-       << outfolder << endl;
+  std::cout << "Simulation completed.  Simulation output written to "
+       << outfolder << '\n';
   return 0;
 } // main
 
+/**
+ * Process command line options.
+*/
 void processOptions(int argc, char ** argv, char * outfolder, Whipple * bike)
 {
   int c, option_index;
@@ -90,7 +101,7 @@ void processOptions(int argc, char ** argv, char * outfolder, Whipple * bike)
       break;
 
     if (c == 'h') {
-      cout <<
+      std::cout <<
 argv[0] << " Version " << OBD_VERSION_MAJOR << "." << OBD_VERSION_MINOR <<
 " commit " << OBD_VERSION_COMMIT << "\n"
 "usage: " << argv[0] << " [OPTION]\n\n"
@@ -145,7 +156,7 @@ argv[0] << " Version " << OBD_VERSION_MAJOR << "." << OBD_VERSION_MINOR <<
     else if (c == 'v')
       verbose_flag = true;
     else {
-      cout << "Invalid option." << endl;
+      std::cout << "Invalid option." << '\n';
       abort();
     }
   } // while()
@@ -155,3 +166,88 @@ argv[0] << " Version " << OBD_VERSION_MAJOR << "." << OBD_VERSION_MINOR <<
     bike->printState();
   }
 } // processOptions()
+
+std::ostream &operator<<(std::ostream &file, const Whipple * discs)
+{
+  file.write((char *) &(discs->t), sizeof discs->t);
+  file.write((char *) &discs->q0, sizeof discs->q0);
+  file.write((char *) &discs->q1, sizeof discs->q1);
+  file.write((char *) &discs->q2, sizeof discs->q2);
+  file.write((char *) &discs->q3, sizeof discs->q3);
+  file.write((char *) &discs->q4, sizeof discs->q4);
+  file.write((char *) &discs->q5, sizeof discs->q5);
+  file.write((char *) &discs->q6, sizeof discs->q6);
+  file.write((char *) &discs->q7, sizeof discs->q7);
+  file.write((char *) &discs->u0, sizeof discs->u0);
+  file.write((char *) &discs->u1, sizeof discs->u1);
+  file.write((char *) &discs->u2, sizeof discs->u2);
+  file.write((char *) &discs->u3, sizeof discs->u3);
+  file.write((char *) &discs->u4, sizeof discs->u4);
+  file.write((char *) &discs->u5, sizeof discs->u5);
+  file.write((char *) discs->no_fn, sizeof discs->no_fn);
+  file.write((char *) &discs->Rx, sizeof discs->Rx);
+  file.write((char *) &discs->Ry, sizeof discs->Ry);
+  file.write((char *) &discs->Rz, sizeof discs->Rz);
+  file.write((char *) &discs->Fx, sizeof discs->Fx);
+  file.write((char *) &discs->Fy, sizeof discs->Fy);
+  file.write((char *) &discs->Fz, sizeof discs->Fz);
+  file.write((char *) &discs->ke, sizeof discs->ke);
+  file.write((char *) &discs->pe, sizeof discs->pe);
+  file.write((char *) &discs->fa_yaw, sizeof discs->fa_yaw);
+  file.write((char *) &discs->fa_lean, sizeof discs->fa_lean);
+  file.write((char *) &discs->fa_pitch, sizeof discs->fa_pitch);
+  file.write((char *) discs->constraints, sizeof discs->constraints);
+  return file;
+} // ostream &operator<<()
+
+/**
+ * Write a Python file which defines a Numpy data type compatible with binary simulation data
+ * data type to enable easy manipulation of simulation results in Python
+ *
+ * @pre filename should be a string with a valid filename
+ * @post Python module written to filename
+*/
+void writeSimRecord_dt(const char * filename)
+{
+  std::ofstream fp(filename, std::ios::out);
+  if (fp.is_open()) {
+    fp << "import numpy as np\n";
+    fp << "sim_dt = np.dtype([('t', np.float64),\n"
+          "                   ('q0', np.float64),\n"
+          "                   ('q1', np.float64),\n"
+          "                   ('q2', np.float64),\n"
+          "                   ('q3', np.float64),\n"
+          "                   ('q4', np.float64),\n"
+          "                   ('q5', np.float64),\n"
+          "                   ('q6', np.float64),\n"
+          "                   ('q7', np.float64),\n"
+          "                   ('u0', np.float64),\n"
+          "                   ('u1', np.float64),\n"
+          "                   ('u2', np.float64),\n"
+          "                   ('u3', np.float64),\n"
+          "                   ('u4', np.float64),\n"
+          "                   ('u5', np.float64),\n"
+          "                   ('fnx', np.float64),\n"
+          "                   ('fny', np.float64),\n"
+          "                   ('fnz', np.float64),\n"
+          "                   ('Rx', np.float64),\n"
+          "                   ('Ry', np.float64),\n"
+          "                   ('Rz', np.float64),\n"
+          "                   ('Fx', np.float64),\n"
+          "                   ('Fy', np.float64),\n"
+          "                   ('Fz', np.float64),\n"
+          "                   ('ke', np.float64),\n"
+          "                   ('pe', np.float64),\n"
+          "                   ('fa_yaw', np.float64),\n"
+          "                   ('fa_lean', np.float64),\n"
+          "                   ('fa_pitch', np.float64),\n"
+          "                   ('nh1', np.float64),\n"
+          "                   ('nh2', np.float64),\n"
+          "                   ('nh3', np.float64)])";
+    fp.close();
+  } else {
+    std::cerr << "Unable to open " << filename << "for writing.\n";
+    std::cerr << "Aborting.\n";
+    exit(0);
+  }
+} // writeSimRecord_dt()
