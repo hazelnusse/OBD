@@ -164,7 +164,7 @@ class Whipple {
     friend double hc_f(double q2, void * params);
     friend double hc_df(double q2, void * params);
     friend void hc_fdf(double q2, void * params, double * f, double * df);
-    // friend ostream &operator<<(ostream &file, const Whipple * discs);
+    friend std::ostream &operator<<(std::ostream &file, const Whipple * discs);
 
   private:
     bool validInertia(double Ixx, double Iyy, double Izz, double Ixz) const;
