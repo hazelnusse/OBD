@@ -526,8 +526,18 @@ void Whipple::evolve(double tj, double * state)
 
 void Whipple::printEvals(void) const
 {
-  std::cout << "evals:\n";
-  gsl_vector_complex_fprintf(stdout, evals, "%+0.16g");
+  std::cout.precision(16);
+  std::cout << "Eigenvalues:\n";
+  for (int i = 0; i < 4; ++i) {
+    double real = GSL_REAL(gsl_vector_complex_get(evals, i));
+    double imag = GSL_REAL(gsl_vector_complex_get(evals, i));
+    std::cout << "lambda_" << i << " = "
+              << real;
+    if (imag > 0.0)
+      std::cout << " + " << imag << "j\n";
+    else
+      std::cout << " - " << -imag << "j\n";
+  }
 }
 
 bool Whipple::validInertia(double Ixx, double Iyy, double Izz, double Ixz) const
