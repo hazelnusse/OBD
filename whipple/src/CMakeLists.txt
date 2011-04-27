@@ -1,7 +1,3 @@
-add_library(whipple
-    gslVecUtils.cpp
-    whipple_al.cpp
-    whipple.cpp
-    whipple_al_steady.cpp
-    whipplesteadycalcs.cpp
-    whippleutils.cpp)
+add_library(gyrostat GyroStat.cpp)
+add_library(whipple whipple.cpp)
+target_link_libraries(whipple gyrostat)
