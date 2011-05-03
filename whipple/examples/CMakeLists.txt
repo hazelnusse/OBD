@@ -22,3 +22,9 @@ target_link_libraries(whipplesteadyreview
     whipple
     ${GSL_LIBRARIES}
     ${GSLCBLAS_LIBRARIES})
+
+add_executable(whipplesteady_origin whipplesteady_origin.cpp)
+target_link_libraries(whipplesteady_origin
+    whipple
+    ${GSL_LIBRARIES}
+    ${GSLCBLAS_LIBRARIES})
