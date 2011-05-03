@@ -155,6 +155,7 @@ class Whipple {
     void writeParameters(const char * filename) const;
     void writeState(const char * filename) const;
     void printState(void) const;
+    void printCfgCon(void) const;
     void printParameters(void) const;
     void printEvals (void) const;
     int evalCase(void) const;

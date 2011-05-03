@@ -530,15 +530,29 @@ void Whipple::printEvals(void) const
   std::cout << "Eigenvalues:\n";
   for (int i = 0; i < 4; ++i) {
     double real = GSL_REAL(gsl_vector_complex_get(evals, i));
-    double imag = GSL_REAL(gsl_vector_complex_get(evals, i));
+    double imag = GSL_IMAG(gsl_vector_complex_get(evals, i));
     std::cout << "lambda_" << i << " = "
               << real;
-    if (imag > 0.0)
+    if (imag >= 0.0)
       std::cout << " + " << imag << "j\n";
     else
       std::cout << " - " << -imag << "j\n";
   }
 }
+
+void Whipple::printCfgCon(void) const
+{
+  std::cout.precision(16);
+  std::cout << "Configuration:\n"
+            << "Lean  = " << q1 << "\n"
+            << "Pitch = " << q2 << "\n"
+            << "Steer = " << q3 << "\n"
+            << "Constraints (should be zero): \n"
+            << "FW Contact Height = " << no_fn[2] << "\n"
+            << "NH[0] = " << constraints[0] << "\n"
+            << "NH[1] = " << constraints[1] << "\n"
+            << "NH[2] = " << constraints[2] << "\n";
+} // printLPS
 
 bool Whipple::validInertia(double Ixx, double Iyy, double Izz, double Ixz) const
 {
