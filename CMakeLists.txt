@@ -33,7 +33,6 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     "MinSizeRel" "RelWithDebInfo")
 endif()
 
-
 # Set g++ compiler flags if GNU C++ compiler is being used
 if(CMAKE_COMPILER_IS_GNUCXX)
     set(CMAKE_CXX_FLAGS "-Wall")
@@ -69,6 +68,7 @@ include_directories("${PROJECT_BINARY_DIR}/include")
 # Find GiNaC
 if (obd_build_derivation)
     find_package(Ginac REQUIRED)
+    find_package(Cln REQUIRED)
 endif()
 
 # Find GSL
