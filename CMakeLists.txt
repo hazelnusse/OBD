@@ -10,6 +10,9 @@ option(obd_build_gui "Build Qt4 gui tool." ON)
 # Option for building documentation using Doxygen
 option(obd_build_docs "Build Doxygen documentation." OFF)
 
+# Option for building code for deriving equations of motion
+option(obd_build_derivation "Build EOM derivation (requires GiNaC)" ON)
+
 # We need to call enable_testing() before any subdirectories are added
 if (obd_build_tests)
     enable_testing()
@@ -52,6 +55,11 @@ configure_file("${PROJECT_SOURCE_DIR}/include/OBDConfig.h.in"
                "${PROJECT_BINARY_DIR}/include/OBDConfig.h")
 
 include_directories("${PROJECT_BINARY_DIR}/include")
+
+# Find GiNaC
+if (obd_build_derivation)
+    find_package(Ginac REQUIRED)
+endif()
 
 # Find GSL
 find_package(GSL REQUIRED)
