@@ -73,9 +73,9 @@ int main(int argc, char ** argv)
   F_R = R_F.transpose();
 
   // A few basis vectors
-  matrix ex(3, 1, lst(1, 0, 0)),
-         ey(3, 1, lst(0, 1, 0)),
-         ez(3, 1, lst(0, 0, 1));
+  matrix e_x(3, 1, lst(1, 0, 0)),
+         e_y(3, 1, lst(0, 1, 0)),
+         e_z(3, 1, lst(0, 0, 1));
 
   // Gyrostat inertia matrices
   matrix * IRCG = new matrix(3, 3), * IFCG = new matrix(3, 3);
@@ -89,14 +89,14 @@ int main(int argc, char ** argv)
   // Front Gyrostat Calculations
   // All front gyrostat vectors and matrix quantities are expressed in the fork
   // coordinate system
-
+  //
   // Position of front wheel center relative to front wheel contact
   //
   // Step 1:  Form unit vector pointing from front wheel center to center of
   // front tire casing directly above front wheel contact
   // gz = unitvec(n3> - dot(n3>, f2>)*f2>)
   matrix * gz = new matrix(3, 1);
-  *gz = F_R.mul(R_B.mul(B_A.mul(ez))).sub(ey.mul_scalar(dot(ey, F_R.mul(R_B.mul(B_A.mul(ez))))));
+  *gz = F_R.mul(R_B.mul(B_A.mul(e_z))).sub(e_y.mul_scalar(dot(e_y, F_R.mul(R_B.mul(B_A.mul(e_z))))));
   // TODO:  Autolev generates a more compact representation of the term in the
   // sqrt()... verify that they are equivalent
   *gz = (*gz).mul_scalar(1.0/sqrt(1.0 - pow(sin(phi)*cos(delta) + sin(delta)*sin(theta)*cos(phi), 2)));
@@ -104,7 +104,7 @@ int main(int argc, char ** argv)
 
   // Step 2:  Form position from front wheel contact to front wheel center
   matrix * r_fn_fbo = new matrix(3, 1);
-  *r_fn_fbo = ((*gz).mul_scalar(-rf)).add(F_R.mul(R_B.mul(B_A.mul(ez))).mul_scalar(-rft));
+  *r_fn_fbo = ((*gz).mul_scalar(-rf)).add(F_R.mul(R_B.mul(B_A.mul(e_z))).mul_scalar(-rft));
 
   // Position of front gyrostat mass center relative to front wheel center,
   matrix * r_fbo_fgo = new matrix(3, 1, lst(xf, 0, zf));
@@ -112,11 +112,20 @@ int main(int argc, char ** argv)
   // Front gyrostat carrier angular velocity
   matrix * w_fa_n = new matrix(3, 1, lst(wx, wy, wz));
 
-  // Front gyrostat carrer angular acceleration
+  // Front gyrostat carrier angular acceleration
   matrix * alf_fa_n = new matrix(3, 1, lst(wxp, wyp, wzp));
 
   // Front gyrostat rotor angular velocity
   matrix * w_fb_n = new matrix(3, 1, lst(wx, wf, wz));
+
+  // Front gyrostat rotor angular acceleration
+  matrix * alf_fb_n = new matrix(3, 1);
+  for (int i = 0; i < 3; ++i) {
+    (*alf_fb_n)(i, 0) = diff((*w_fb_n)(i, 0), wx)*wxp
+                      + diff((*w_fb_n)(i, 0), wf)*wfp
+                      + diff((*w_fb_n)(i, 0), wz)*wzp;
+  }
+  *alf_fb_n = (*alf_fb_n).add(cross(*w_fa_n, *w_fb_n));
 
   // Front gyrostat mass center velocity
   matrix * v_fgo_n = new matrix(3, 1);
@@ -129,14 +138,14 @@ int main(int argc, char ** argv)
   matrix * a_fgo_n = new matrix(3, 1);
   for (int i = 0; i < 3; ++i) {
     (*a_fgo_n)[i] = diff((*v_fgo_n)(i, 0), wx)*wxp
-                    + diff((*v_fgo_n)(i, 0), wy)*wyp
-                    + diff((*v_fgo_n)(i, 0), wz)*wzp
-                    + diff((*v_fgo_n)(i, 0), ws)*wsp
-                    + diff((*v_fgo_n)(i, 0), wr)*wrp
-                    + diff((*v_fgo_n)(i, 0), wf)*wfp
-                    + diff((*v_fgo_n)(i, 0), phi)*phip
-                    + diff((*v_fgo_n)(i, 0), theta)*thetap
-                    + diff((*v_fgo_n)(i, 0), delta)*deltap;
+                  + diff((*v_fgo_n)(i, 0), wy)*wyp
+                  + diff((*v_fgo_n)(i, 0), wz)*wzp
+                  + diff((*v_fgo_n)(i, 0), ws)*wsp
+                  + diff((*v_fgo_n)(i, 0), wr)*wrp
+                  + diff((*v_fgo_n)(i, 0), wf)*wfp
+                  + diff((*v_fgo_n)(i, 0), phi)*phip
+                  + diff((*v_fgo_n)(i, 0), theta)*thetap
+                  + diff((*v_fgo_n)(i, 0), delta)*deltap;
   }
   *a_fgo_n = (*a_fgo_n).add(cross(*w_fa_n, *v_fgo_n));
 
@@ -152,16 +161,20 @@ int main(int argc, char ** argv)
   matrix * TFCG_steady = new matrix(3,1);
   *TFCG_steady = cross(*w_fa_n, (*IFCG).mul(*w_fa_n));
 
+  // Rear Gyrostat Calculations
+  // All front gyrostat vectors and matrix quantities are expressed in the R
+  // coordinate system
+  //
   // Position of rear wheel center relative to rear wheel contact
   matrix * r_rn_rbo = new matrix(3, 1);
-  *r_rn_rbo = (R_B.mul(ez)).mul_scalar(-rr).add(R_B.mul(B_A.mul(ez)).mul_scalar(-rrt));
+  *r_rn_rbo = (R_B.mul(e_z)).mul_scalar(-rr).add(R_B.mul(B_A.mul(e_z)).mul_scalar(-rrt));
 
   // Position of rear gyrostat mass center relative to rear wheel center
   matrix * r_rbo_rgo = new matrix(3, 1, lst(xr, 0, zr));
 
   // Rear gyrostat carrier angular velocity
   matrix * w_ra_n = new matrix(3, 1);
-  *w_ra_n = R_F.mul((*w_fa_n).sub(ez.mul_scalar(dot(*w_fa_n, ez))).add(ez.mul_scalar(ws)));
+  *w_ra_n = R_F.mul((*w_fa_n).sub(e_z.mul_scalar(dot(*w_fa_n, e_z))).add(e_z.mul_scalar(ws)));
 
   // Rear gyrostat angular accleration
   matrix * alf_ra_n = new matrix(3, 1);
@@ -175,6 +188,17 @@ int main(int argc, char ** argv)
   // Rear gyrostat rotor angular velocity
   matrix * w_rb_n = new matrix(3, 1,
                                lst((*w_ra_n)[0], wr, (*w_ra_n)[2]));
+
+  // Rear gyrostat rotor angular acceleration
+  matrix * alf_rb_n = new matrix(3, 1);
+  for (int i = 0; i < 3; ++i) {
+    (*alf_rb_n)[i] = diff((*w_rb_n)[i], wx)*wxp
+                   + diff((*w_rb_n)[i], wy)*wyp
+                   + diff((*w_rb_n)[i], ws)*wsp
+                   + diff((*w_rb_n)[i], wr)*wrp
+                   + diff((*w_rb_n)[i], delta)*deltap;
+  }
+  *alf_rb_n = (*alf_rb_n).add(cross(*w_ra_n, *w_rb_n));
 
   // Rear gyrostat mass center velocity
   matrix * v_rgo_n = new matrix(3, 1);
@@ -210,6 +234,19 @@ int main(int argc, char ** argv)
   matrix * TRCG_steady = new matrix(3,1);
   *TRCG_steady = cross(*w_ra_n, (*IRCG).mul(*w_ra_n));
 
+  // Holonomic constraint
+  // -rrt*nz> - rf*bz> + lr*rx> + ls*rz> + lf*fx> + rf*gz> + rft*nz>
+  ex hc;
+  hc = dot(e_z.mul_scalar(rft-rrt), e_z)
+     + dot(A_B.mul(e_z).mul_scalar(-rr), e_z)
+     + dot(A_B.mul(B_R.mul(e_x)).mul_scalar(lr), e_z)
+     + dot(A_B.mul(B_R.mul(e_z)).mul_scalar(ls), e_z)
+     + dot(((A_B.mul(B_R.mul(R_F))).mul(*gz)).mul_scalar(lf), e_z)
+     ;
+     //  add(A_B.mul(B_R.mul(e_x.mul_scalar(lr).add(e_z.mul_scalar(ls))))).
+     //  add((A_B.mul(B_R.mul(R_F.mul((*gz))))).mul_scalar(rf)))(2, 0),
+     //  lst(rft, rrt, rr, rf, lr, ls, lf));
+
   // Output LaTeX
   cout << latex;
   writelatexHeader();
@@ -230,6 +267,8 @@ int main(int argc, char ** argv)
        << *alf_fa_n << "_{F}\n" << "\\end{align}\n"
        << "\\begin{align}\n  {}^N\\bs{\\omega}^{FB} &= "
        << *w_fb_n << "_{F}\n" << "\\end{align}\n"
+       << "\\begin{align}\n  {}^N\\bs{\\alpha}^{FB} &= "
+       << *alf_fb_n << "_{F}\n" << "\\end{align}\n"
        << "\\begin{align}\n  {}^N\\bs{v}^{FGO} &= "
        << *v_fgo_n << "_{F}\n" << "\\end{align}\n"
        << "\\begin{align}\n  {}^N\\bs{a}^{FGO} &= "
@@ -250,6 +289,8 @@ int main(int argc, char ** argv)
        << *alf_ra_n << "_{R}\n" << "\\end{align}\n"
        << "\\begin{align}\n  {}^N\\bs{\\omega}^{RB} &= "
        << *w_rb_n << "_{R}\n" << "\\end{align}\n"
+       << "\\begin{align}\n  {}^N\\bs{\\alpha}^{RB} &= "
+       << *alf_rb_n << "_{R}\n" << "\\end{align}\n"
        << "\\begin{align}\n  {}^N\\bs{v}^{RGO} &= "
        << *v_rgo_n << "_{R}\n" << "\\end{align}\n"
        << "\\begin{align}\n  {}^N\\bs{a}^{RGO} &= "
@@ -260,14 +301,18 @@ int main(int argc, char ** argv)
        << *TRCG << "_{R}\n" << "\\end{align}\n"
        << "\\begin{align}\n  {}^N\\bs{T}^{RCG}_{steady} &= "
        << *TRCG_steady << "_{R}\n" << "\\end{align}\n"
+       << "Holonomic constraint\n"
+       << "\\begin{align}\n  f_{hc}(\\phi, \\theta, \\delta) &= "
+       << hc << "\n" << "\\end{align}\n"
        << "\\end{document}\n";
 
 
   // Free dynamically allocated memory
   // Front gyrostat quantities
-  delete alf_fa_n;
   delete w_fa_n;
   delete w_fb_n;
+  delete alf_fa_n;
+  delete alf_fb_n;
   delete r_fbo_fgo;
   delete r_fn_fbo;
   delete gz;
@@ -283,6 +328,7 @@ int main(int argc, char ** argv)
   delete w_ra_n;
   delete w_rb_n;
   delete alf_ra_n;
+  delete alf_rb_n;
   delete v_rgo_n;
   delete a_rgo_n;
   delete a_rgo_n_steady;
