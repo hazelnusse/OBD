@@ -52,6 +52,10 @@ int main(int argc, char ** argv)
             Irs("Irs", "I_{rs}"), Ifs("Ifs", "I_{fs}"),
             mr("mr", "m_{r}"), mf("mf", "m_{f}");
 
+
+  // List of generalized speeds
+  symbol speeds[6] = {wx, wy, wz, ws, wr, wf};
+
   // Rotation matrices
   matrix N_A(3,3), A_B(3,3), B_R(3,3), R_F(3,3),
          A_N(3,3), B_A(3,3), R_B, F_R(3,3);
@@ -98,7 +102,7 @@ int main(int argc, char ** argv)
   matrix * gz = new matrix(3, 1);
   *gz = F_R.mul(R_B.mul(B_A.mul(e_z))).sub(e_y.mul_scalar(dot(e_y, F_R.mul(R_B.mul(B_A.mul(e_z))))));
   // TODO:  Autolev generates a more compact representation of the term in the
-  // sqrt()... verify that they are equivalent
+  // dot(gz, gz)... verify that they are equivalent
   *gz = (*gz).mul_scalar(1.0/sqrt(1.0 - pow(sin(phi)*cos(delta) + sin(delta)*sin(theta)*cos(phi), 2)));
   //*gz = (*gz).mul_scalar(1.0/sqrt(dot(*gz, *gz)));
 
@@ -106,17 +110,61 @@ int main(int argc, char ** argv)
   matrix * r_fn_fbo = new matrix(3, 1);
   *r_fn_fbo = ((*gz).mul_scalar(-rf)).add(F_R.mul(R_B.mul(B_A.mul(e_z))).mul_scalar(-rft));
 
+  (*r_fn_fbo)(0, 0) =  (rf/(sqrt(1.0 - pow(sin(phi)*cos(delta) + sin(delta)*sin(theta)*cos(phi), 2))) + rft)*(sin(theta)*cos(delta)*cos(phi)-sin(phi)*sin(delta));
+  (*r_fn_fbo)(2, 0) = -(rf/(sqrt(1.0 - pow(sin(phi)*cos(delta) + sin(delta)*sin(theta)*cos(phi), 2))) + rft)*cos(theta)*cos(phi);
+
   // Position of front gyrostat mass center relative to front wheel center,
   matrix * r_fbo_fgo = new matrix(3, 1, lst(xf, 0, zf));
 
   // Front gyrostat carrier angular velocity
   matrix * w_fa_n = new matrix(3, 1, lst(wx, wy, wz));
 
-  // Front gyrostat carrier angular acceleration
-  matrix * alf_fa_n = new matrix(3, 1, lst(wxp, wyp, wzp));
+  // Front gyrostat carrier partial angular velocities
+  // the r-th column represents the r-th partial angular velocity
+  matrix * p_w_fa_n = new matrix(3, 6);
+  for (int i = 0; i < 3; ++i) {
+    for (int j = 0; j < 6; ++j) {
+      (*p_w_fa_n)(i, j) = diff((*w_fa_n)(i, 0), speeds[j]);
+    }
+  }
 
   // Front gyrostat rotor angular velocity
   matrix * w_fb_n = new matrix(3, 1, lst(wx, wf, wz));
+
+  // First vector term in Eqn 23 of Mitiguy and Reckdahl
+  matrix * w_fa_n_x_wf_fy = new matrix(3, 1);
+  * w_fa_n_x_wf_fy = cross(*w_fa_n, matrix(3, 1, lst(0, wf, 0)));
+
+  // Second vector term in Eqn 23 of Mitiguy and Reckdahl
+  matrix * alf_f_spin = new matrix(3, 1, lst(0, wfp, 0));
+
+  // Front gyrostat rotor partial angular velocities
+  // the r-th column represents the r-th partial angular velocity
+  matrix * p_w_fb_n = new matrix(3, 6);
+  for (int i = 0; i < 3; ++i) {
+    for (int j = 0; j < 6; ++j) {
+      (*p_w_fb_n)(i, j) = diff((*w_fb_n)(i, 0), speeds[j]);
+    }
+  }
+
+  // Front gyrostat mass center velocity
+  matrix * v_fgo_n = new matrix(3, 1);
+  *v_fgo_n = (cross(*w_fb_n, *r_fn_fbo)).add(cross(*w_fa_n, *r_fbo_fgo));
+  (*v_fgo_n)(0,0) = collect((*v_fgo_n)(0,0), lst(wx, wy, wz, wf));
+  (*v_fgo_n)(1,0) = collect((*v_fgo_n)(1,0), lst(wx, wy, wz, wf));
+  (*v_fgo_n)(2,0) = collect((*v_fgo_n)(2,0), lst(wx, wy, wz, wf));
+
+  // Front gyrostat mass center partial velocities
+  // the r-th column represents the r-th partial velocity
+  matrix * p_v_fgo_n = new matrix(3, 6);
+  for (int i = 0; i < 3; ++i) {
+    for (int j = 0; j < 6; ++j) {
+      (*p_v_fgo_n)(i, j) = diff((*v_fgo_n)(i, 0), speeds[j]);
+    }
+  }
+
+  // Front gyrostat carrier angular acceleration
+  matrix * alf_fa_n = new matrix(3, 1, lst(wxp, wyp, wzp));
 
   // Front gyrostat rotor angular acceleration
   matrix * alf_fb_n = new matrix(3, 1);
@@ -126,13 +174,6 @@ int main(int argc, char ** argv)
                       + diff((*w_fb_n)(i, 0), wz)*wzp;
   }
   *alf_fb_n = (*alf_fb_n).add(cross(*w_fa_n, *w_fb_n));
-
-  // Front gyrostat mass center velocity
-  matrix * v_fgo_n = new matrix(3, 1);
-  *v_fgo_n = (cross(*w_fb_n, *r_fn_fbo)).add(cross(*w_fa_n, *r_fbo_fgo));
-  (*v_fgo_n)(0,0) = collect((*v_fgo_n)(0,0), lst(wx, wy, wz, wf));
-  (*v_fgo_n)(1,0) = collect((*v_fgo_n)(1,0), lst(wx, wy, wz, wf));
-  (*v_fgo_n)(2,0) = collect((*v_fgo_n)(2,0), lst(wx, wy, wz, wf));
 
   // Front gyrostat mass center acceleration
   matrix * a_fgo_n = new matrix(3, 1);
@@ -176,6 +217,35 @@ int main(int argc, char ** argv)
   matrix * w_ra_n = new matrix(3, 1);
   *w_ra_n = R_F.mul((*w_fa_n).sub(e_z.mul_scalar(dot(*w_fa_n, e_z))).add(e_z.mul_scalar(ws)));
 
+  // Rear gyrostat carrier partial angular velocities
+  // the r-th column represents the r-th partial angular velocity
+  matrix * p_w_ra_n = new matrix(3, 6);
+  for (int i = 0; i < 3; ++i) {
+    for (int j = 0; j < 6; ++j) {
+      (*p_w_ra_n)(i, j) = diff((*w_ra_n)(i, 0), speeds[j]);
+    }
+  }
+
+  // Rear gyrostat rotor angular velocity
+  matrix * w_rb_n = new matrix(3, 1,
+                               lst((*w_ra_n)[0], wr, (*w_ra_n)[2]));
+
+  // Rear gyrostat rotor partial angular velocities
+  // the r-th column represents the r-th partial angular velocity
+  matrix * p_w_rb_n = new matrix(3, 6);
+  for (int i = 0; i < 3; ++i) {
+    for (int j = 0; j < 6; ++j) {
+      (*p_w_rb_n)(i, j) = diff((*w_rb_n)(i, 0), speeds[j]);
+    }
+  }
+
+  // First vector term in Eqn 23 of Mitiguy and Reckdahl
+  matrix * w_ra_n_x_wr_ry = new matrix(3, 1);
+  * w_ra_n_x_wr_ry = cross(*w_ra_n, matrix(3, 1, lst(0, wr, 0)));
+
+  // Second vector term in Eqn 23 of Mitiguy and Reckdahl
+  matrix * alf_r_spin = new matrix(3, 1, lst(0, wrp, 0));
+
   // Rear gyrostat angular accleration
   matrix * alf_ra_n = new matrix(3, 1);
   for (int i = 0; i < 3; ++i) {
@@ -184,10 +254,6 @@ int main(int argc, char ** argv)
                    + diff((*w_ra_n)[i], ws)*wsp
                    + diff((*w_ra_n)[i], delta)*deltap;
   }
-
-  // Rear gyrostat rotor angular velocity
-  matrix * w_rb_n = new matrix(3, 1,
-                               lst((*w_ra_n)[0], wr, (*w_ra_n)[2]));
 
   // Rear gyrostat rotor angular acceleration
   matrix * alf_rb_n = new matrix(3, 1);
@@ -206,6 +272,15 @@ int main(int argc, char ** argv)
   (*v_rgo_n)[0] = collect((*v_rgo_n)[0], lst(wx, wy, wz, ws, wr, wf));
   (*v_rgo_n)[1] = collect((*v_rgo_n)[1], lst(wx, wy, wz, ws, wr, wf));
   (*v_rgo_n)[2] = collect((*v_rgo_n)[2], lst(wx, wy, wz, ws, wr, wf));
+
+  // Front gyrostat mass center partial velocities
+  // the r-th column represents the r-th partial velocity
+  matrix * p_v_rgo_n = new matrix(3, 6);
+  for (int i = 0; i < 3; ++i) {
+    for (int j = 0; j < 6; ++j) {
+      (*p_v_rgo_n)(i, j) = diff((*v_rgo_n)(i, 0), speeds[j]);
+    }
+  }
 
   // Rear gyrostat mass center acceleration
   matrix * a_rgo_n = new matrix(3, 1);
@@ -237,15 +312,70 @@ int main(int argc, char ** argv)
   // Holonomic constraint
   // -rrt*nz> - rf*bz> + lr*rx> + ls*rz> + lf*fx> + rf*gz> + rft*nz>
   ex hc;
-  hc = dot(e_z.mul_scalar(rft-rrt), e_z)
-     + dot(A_B.mul(e_z).mul_scalar(-rr), e_z)
+  hc = (rft - rrt)
+     + collect(dot(A_B.mul(e_z).mul_scalar(-rr), e_z)
      + dot(A_B.mul(B_R.mul(e_x)).mul_scalar(lr), e_z)
-     + dot(A_B.mul(B_R.mul(e_z)).mul_scalar(ls), e_z)
-     + dot(((A_B.mul(B_R.mul(R_F))).mul(*gz)).mul_scalar(lf), e_z)
+     + dot(A_B.mul(B_R.mul(e_z)).mul_scalar(ls), e_z), cos(phi))
+     + dot(((A_B.mul(B_R.mul(R_F))).mul(e_x)).mul_scalar(lf), e_z)
+     + rf*sqrt(1.0 - pow(sin(phi)*cos(delta) + sin(delta)*sin(theta)*cos(phi), 2))
      ;
      //  add(A_B.mul(B_R.mul(e_x.mul_scalar(lr).add(e_z.mul_scalar(ls))))).
      //  add((A_B.mul(B_R.mul(R_F.mul((*gz))))).mul_scalar(rf)))(2, 0),
      //  lst(rft, rrt, rr, rf, lr, ls, lf));
+
+  ex Frstar_R[6], Frstar_F[6], *tmpr, *tmpf;
+  for (int r = 0; r < 6; ++r) {
+    Frstar_R[r] = 0;
+    Frstar_F[r] = 0;
+
+    /*
+    // First term in Eqn 22 of Mitiguy and Reckdahl
+    // This one is the nastiest expression of all, it comes from dotting the
+    // partial velocities with the accelerations
+    tmpr = new ex;
+    *tmpr = 0;
+    tmpf = new ex;
+    *tmpf = 0;
+    for (int i = 0; i < 3; ++i) {
+      *tmpr += (*p_v_rgo_n)(i, r)*((*a_rgo_n)(i, 0));
+      *tmpf += (*p_v_fgo_n)(i, r)*((*a_fgo_n)(i, 0));
+    }
+    Frstar_R[r] -= mr*(*tmpr);  // multiply the by rear assembly mass and subtract
+    Frstar_F[r] -= mf*(*tmpf);  // multiply the by front assembly mass and subtract
+    delete tmpr;
+    delete tmpf;
+    */
+
+    // Second term in Eqn 22 of Mitiguy and Reckdahl
+    tmpr = new ex;
+    *tmpr = 0;
+    tmpf = new ex;
+    *tmpf = 0;
+    for (int i = 0; i < 3; ++i) {
+      *tmpr += (*p_w_ra_n)(i, r)*((*TRCG)(i, 0));
+      *tmpf += (*p_w_fa_n)(i, r)*((*TFCG)(i, 0));
+    }
+    Frstar_R[r] -= *tmpr;  // Minus so that we end up with Eqn 24
+    Frstar_F[r] -= *tmpf;  // Minus so that we end up with Eqn 24
+    delete tmpr;
+    delete tmpf;
+
+    // Second term in Eqn 23 of Mitiguy and Reckdahl
+    tmpr = new ex;
+    *tmpr = 0;
+    tmpf = new ex;
+    *tmpf = 0;
+    for (int i = 0; i < 3; ++i) {
+      *tmpr += (*p_w_ra_n)(i, r)*((*w_ra_n_x_wr_ry)(i, 0)); // First term in parenthesis in Eq (23)
+      *tmpr += (*p_w_rb_n)(i, r)*((*alf_r_spin)(i,0));
+      *tmpf += (*p_w_fa_n)(i, r)*((*w_fa_n_x_wf_fy)(i, 0)); // First term in parenthesis in Eq (23)
+      *tmpf += (*p_w_fb_n)(i, r)*((*alf_f_spin)(i,0));
+    }
+    Frstar_R[r] -= Irs*(*tmpr);  // Minus so that we end up with Eqn 24
+    Frstar_F[r] -= Ifs*(*tmpf);  // Minus so that we end up with Eqn 24
+    delete tmpr;
+    delete tmpf;
+  }
 
   // Output LaTeX
   cout << latex;
@@ -255,6 +385,15 @@ int main(int argc, char ** argv)
        << "\\begin{align}\n  {}^AR^{B} &= " << A_B << "\n" << "\\end{align}\n"
        << "\\begin{align}\n  {}^BR^{R} &= " << B_R << "\n" << "\\end{align}\n"
        << "\\begin{align}\n  {}^RR^{F} &= " << R_F << "\n" << "\\end{align}\n"
+       << "The ordering of the generalized speeds, for purposes of calculating"
+          " partial velocity and partial angular velocity matrices, is assumed"
+          " to be $["
+          << speeds[0] << ", "
+          << speeds[1] << ", "
+          << speeds[2] << ", "
+          << speeds[3] << ", "
+          << speeds[4] << ", "
+          << speeds[5] << "]$\n\n"
        << "\\begin{align}\n  \\bs{g}_z&= "
        << *gz << "_{F}\n" << "\\end{align}\n"
        << "\\begin{align}\n  \\bs{r}^{FBO/FN} &= "
@@ -263,14 +402,26 @@ int main(int argc, char ** argv)
        << *r_fbo_fgo << "_{F}\n" << "\\end{align}\n"
        << "\\begin{align}\n  {}^N\\bs{\\omega}^{FA} &= "
        << *w_fa_n << "_{F}\n" << "\\end{align}\n"
-       << "\\begin{align}\n  {}^N\\bs{\\alpha}^{FA} &= "
-       << *alf_fa_n << "_{F}\n" << "\\end{align}\n"
+       << "Partial angular velocities of $FA$ in $N$ "
+       << "\\begin{align}\n  {}^N\\bs{\\omega}^{FA}_{partials} &= "
+       << *p_w_fa_n << "_{F}\n" << "\\end{align}\n"
        << "\\begin{align}\n  {}^N\\bs{\\omega}^{FB} &= "
        << *w_fb_n << "_{F}\n" << "\\end{align}\n"
-       << "\\begin{align}\n  {}^N\\bs{\\alpha}^{FB} &= "
-       << *alf_fb_n << "_{F}\n" << "\\end{align}\n"
+       << "Partial angular velocities of $FB$ in $N$ "
+       << "\\begin{align}\n  {}^N\\bs{\\omega}^{FB}_{partials} &= "
+       << *p_w_fb_n << "_{F}\n" << "\\end{align}\n"
+       << "\\begin{align}\n  {}^N\\bs{\\omega}^{FA} \\times  \\omega_f "
+       << e_y << "_{F} &= "
+       << *w_fa_n_x_wf_fy << "\\end{align}\n"
        << "\\begin{align}\n  {}^N\\bs{v}^{FGO} &= "
        << *v_fgo_n << "_{F}\n" << "\\end{align}\n"
+       << "Partial velocities of $FGO$ in $N$ "
+       << "\\begin{align}\n  {}^N\\bs{v}^{FGO}_{partials} &= "
+       << *p_v_fgo_n << "_{F}\n" << "\\end{align}\n"
+       << "\\begin{align}\n  {}^N\\bs{\\alpha}^{FA} &= "
+       << *alf_fa_n << "_{F}\n" << "\\end{align}\n"
+       << "\\begin{align}\n  {}^N\\bs{\\alpha}^{FB} &= "
+       << *alf_fb_n << "_{F}\n" << "\\end{align}\n"
        << "\\begin{align}\n  {}^N\\bs{a}^{FGO} &= "
        << *a_fgo_n << "_{F}\n" << "\\end{align}\n"
        << "\\begin{align}\n  {}^N\\bs{a}^{FGO}_{steady} &= "
@@ -279,20 +430,35 @@ int main(int argc, char ** argv)
        << *TFCG << "_{F}\n" << "\\end{align}\n"
        << "\\begin{align}\n  {}^N\\bs{T}^{FCG}_{steady} &= "
        << *TFCG_steady << "_{F}\n" << "\\end{align}\n"
+       << "\\begin{align}\n  F_x^{F*} &= " << Frstar_F[0] << "\\\\\n"
+       << "  F_y^{F*} &= " << Frstar_F[1] << "\\\\\n"
+       << "  F_z^{F*} &= " << Frstar_F[2] << "\\\\\n"
+       << "  F_s^{F*} &= " << Frstar_F[3] << "\\\\\n"
+       << "  F_r^{F*} &= " << Frstar_F[4] << "\\\\\n"
+       << "  F_f^{F*} &= " << Frstar_F[5] << "\\end{align}\n"
        << "\\begin{align}\n  \\bs{r}^{RBO/RN} &= "
        << *r_rn_rbo << "_{R}\n" << "\\end{align}\n"
        << "\\begin{align}\n  \\bs{r}^{RGO/RBO} &= "
        << *r_rbo_rgo << "_{R}\n" << "\\end{align}\n"
        << "\\begin{align}\n  {}^N\\bs{\\omega}^{RA} &= "
        << *w_ra_n << "_{R}\n" << "\\end{align}\n"
+       << "Partial angular velocities of $RA$ in $N$ "
+       << "\\begin{align}\n  {}^N\\bs{\\omega}^{RA}_{partials} &= "
+       << *p_w_ra_n << "_{R}\n" << "\\end{align}\n"
        << "\\begin{align}\n  {}^N\\bs{\\alpha}^{RA} &= "
        << *alf_ra_n << "_{R}\n" << "\\end{align}\n"
        << "\\begin{align}\n  {}^N\\bs{\\omega}^{RB} &= "
        << *w_rb_n << "_{R}\n" << "\\end{align}\n"
+       << "Partial angular velocities of $RB$ in $N$ "
+       << "\\begin{align}\n  {}^N\\bs{\\omega}^{RB}_{partials} &= "
+       << *p_w_rb_n << "_{R}\n" << "\\end{align}\n"
        << "\\begin{align}\n  {}^N\\bs{\\alpha}^{RB} &= "
        << *alf_rb_n << "_{R}\n" << "\\end{align}\n"
        << "\\begin{align}\n  {}^N\\bs{v}^{RGO} &= "
        << *v_rgo_n << "_{R}\n" << "\\end{align}\n"
+       << "Partial velocities of $RGO$ in $N$ "
+       << "\\begin{align}\n  {}^N\\bs{v}^{RGO}_{partials} &= "
+       << *p_v_rgo_n << "_{R}\n" << "\\end{align}\n"
        << "\\begin{align}\n  {}^N\\bs{a}^{RGO} &= "
        << *a_rgo_n << "_{R}\n" << "\\end{align}\n"
        << "\\begin{align}\n  {}^N\\bs{a}^{RGO}_{steady} &= "
@@ -301,6 +467,12 @@ int main(int argc, char ** argv)
        << *TRCG << "_{R}\n" << "\\end{align}\n"
        << "\\begin{align}\n  {}^N\\bs{T}^{RCG}_{steady} &= "
        << *TRCG_steady << "_{R}\n" << "\\end{align}\n"
+       << "\\begin{align}\n  F_x^{R*} &= " << Frstar_R[0] << "\\\\\n"
+       << "  F_y^{R*} &= " << Frstar_R[1] << "\\\\\n"
+       << "  F_z^{R*} &= " << Frstar_R[2] << "\\\\\n"
+       << "  F_s^{R*} &= " << Frstar_R[3] << "\\\\\n"
+       << "  F_r^{R*} &= " << Frstar_R[4] << "\\\\\n"
+       << "  F_f^{R*} &= " << Frstar_R[5] << "\\end{align}\n"
        << "Holonomic constraint\n"
        << "\\begin{align}\n  f_{hc}(\\phi, \\theta, \\delta) &= "
        << hc << "\n" << "\\end{align}\n"
@@ -310,13 +482,18 @@ int main(int argc, char ** argv)
   // Free dynamically allocated memory
   // Front gyrostat quantities
   delete w_fa_n;
+  delete p_w_fa_n;
   delete w_fb_n;
+  delete w_fa_n_x_wf_fy;
+  delete alf_f_spin;
+  delete p_w_fb_n;
   delete alf_fa_n;
   delete alf_fb_n;
   delete r_fbo_fgo;
   delete r_fn_fbo;
   delete gz;
   delete v_fgo_n;
+  delete p_v_fgo_n;
   delete a_fgo_n;
   delete a_fgo_n_steady;
   delete TFCG;
@@ -326,10 +503,15 @@ int main(int argc, char ** argv)
   delete r_rn_rbo;
   delete r_rbo_rgo;
   delete w_ra_n;
+  delete p_w_ra_n;
   delete w_rb_n;
+  delete w_ra_n_x_wr_ry;
+  delete alf_r_spin;
+  delete p_w_rb_n;
   delete alf_ra_n;
   delete alf_rb_n;
   delete v_rgo_n;
+  delete p_v_rgo_n;
   delete a_rgo_n;
   delete a_rgo_n_steady;
   delete TRCG;
