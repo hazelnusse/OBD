@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include <ginac/ginac.h>
 
 using namespace std;
@@ -6,7 +7,7 @@ using namespace GiNaC;
 
 void writelatexHeader(void);
 ex dot(const matrix & a, const matrix & b);
-matrix cross(const matrix &a, const matrix & b);
+matrix cross(const matrix & a, const matrix & b);
 
 int main(int argc, char ** argv)
 {
@@ -49,9 +50,20 @@ int main(int argc, char ** argv)
             Irzz("Irzz", "I_{rzz}"), Irxz("Irxz", "I_{rxz}"),
             Ifxx("Ifxx", "I_{fxx}"), Ifyy("Ifyy", "I_{fyy}"),
             Ifzz("Ifzz", "I_{fzz}"), Ifxz("Ifxz", "I_{fxz}"),
-            Irs("Irs", "I_{rs}"), Ifs("Ifs", "I_{fs}"),
+            Jr("Jr", "J_r"), Jf("Jf", "J_f"),
             mr("mr", "m_{r}"), mf("mf", "m_{f}");
 
+  // Steady turning conditions
+  exmap m;
+  m[phip] = 0;
+  m[thetap] = 0;
+  m[deltap] = 0;
+  m[wxp] = 0;
+  m[wyp] = 0;
+  m[wzp] = 0;
+  m[wsp] = 0;
+  m[wfp] = 0;
+  m[wrp] = 0;
 
   // List of generalized speeds
   symbol speeds[6] = {wx, wy, wz, ws, wr, wf};
@@ -83,12 +95,12 @@ int main(int argc, char ** argv)
 
   // Gyrostat inertia matrices
   matrix * IRCG = new matrix(3, 3), * IFCG = new matrix(3, 3);
-  *IRCG = Irxx,    0, Irxz,
-             0, Iryy,    0,
-          Irxz,    0, Irzz;
-  *IFCG = Ifxx,    0, Ifxz,
-             0, Ifyy,    0,
-          Ifxz,    0, Ifzz;
+  *IRCG = Irxx,        0, Irxz,
+             0, Iryy-Jr,    0,
+          Irxz,        0, Irzz;
+  *IFCG = Ifxx,        0, Ifxz,
+             0, Ifyy-Jf,    0,
+          Ifxz,        0, Ifzz;
 
   // Front Gyrostat Calculations
   // All front gyrostat vectors and matrix quantities are expressed in the fork
@@ -176,23 +188,47 @@ int main(int argc, char ** argv)
   *alf_fb_n = (*alf_fb_n).add(cross(*w_fa_n, *w_fb_n));
 
   // Front gyrostat mass center acceleration
+  // By assumption of no-slip rolling, acceleration of contact point is zero,
+  // so we apply the acceleration theorem for two points fixed on a rigid body,
+  // first to the contact point and the wheel center, second to the wheel
+  // center and the gyrostat mass center.
   matrix * a_fgo_n = new matrix(3, 1);
-  for (int i = 0; i < 3; ++i) {
-    (*a_fgo_n)[i] = diff((*v_fgo_n)(i, 0), wx)*wxp
-                  + diff((*v_fgo_n)(i, 0), wy)*wyp
-                  + diff((*v_fgo_n)(i, 0), wz)*wzp
-                  + diff((*v_fgo_n)(i, 0), ws)*wsp
-                  + diff((*v_fgo_n)(i, 0), wr)*wrp
-                  + diff((*v_fgo_n)(i, 0), wf)*wfp
-                  + diff((*v_fgo_n)(i, 0), phi)*phip
-                  + diff((*v_fgo_n)(i, 0), theta)*thetap
-                  + diff((*v_fgo_n)(i, 0), delta)*deltap;
-  }
-  *a_fgo_n = (*a_fgo_n).add(cross(*w_fa_n, *v_fgo_n));
+  *a_fgo_n = cross(*w_fb_n, cross(*w_fb_n, *r_fn_fbo))  // second term in 2.7.2
+        .add(cross(*alf_fb_n, *r_fn_fbo))               // third term in 2.7.2
+        .add(cross(*w_fa_n, cross(*w_fa_n, *r_fbo_fgo)))// second term in 2.7.2
+        .add(cross(*alf_fa_n, *r_fbo_fgo));             // third term in 2.7.2
+
+  // Represent cross(w_fa_n, cross(w_fa_n, XXX)) as M*XXX
+  matrix * w_fa_n_sqrd = new matrix(3, 3);
+  (*w_fa_n_sqrd) = 0, -(*w_fa_n)(2, 0), (*w_fa_n)(1, 0),
+                  (*w_fa_n)(2, 0), 0, -(*w_fa_n)(0, 0),
+                  -(*w_fa_n)(1, 0), (*w_fa_n)(0, 0), 0;
+  (*w_fa_n_sqrd) = (*w_fa_n_sqrd).mul(*w_fa_n_sqrd);
+
+  // Represent cross(w_fb_n, cross(w_fb_n, XXX)) as M*XXX
+  matrix * w_fb_n_sqrd = new matrix(3, 3);
+  (*w_fb_n_sqrd) = 0, -(*w_fb_n)(2, 0), (*w_fb_n)(1, 0),
+                  (*w_fb_n)(2, 0), 0, -(*w_fb_n)(0, 0),
+                  -(*w_fb_n)(1, 0), (*w_fb_n)(0, 0), 0;
+  (*w_fb_n_sqrd) = (*w_fb_n_sqrd).mul(*w_fb_n_sqrd);
+
+  // Represent cross(alf_fa_n, XXX) as M*XXX
+  matrix * alf_fa_n_M = new matrix(3, 3);
+  (*alf_fa_n_M) = 0, -(*alf_fa_n)(2, 0), (*alf_fa_n)(1, 0),
+                  (*alf_fa_n)(2, 0), 0, -(*alf_fa_n)(0, 0),
+                  -(*alf_fa_n)(1, 0), (*alf_fa_n)(0, 0), 0;
+
+  // Represent cross(alf_fa_n, XXX) as M*XXX
+  matrix * alf_fb_n_M = new matrix(3, 3);
+  (*alf_fb_n_M) = 0, -(*alf_fb_n)(2, 0), (*alf_fb_n)(1, 0),
+                  (*alf_fb_n)(2, 0), 0, -(*alf_fb_n)(0, 0),
+                  -(*alf_fb_n)(1, 0), (*alf_fb_n)(0, 0), 0;
+
 
   // Front gyrostat steady turning mass center acceleration
   matrix * a_fgo_n_steady = new matrix(3, 1);
-  *a_fgo_n_steady = cross(*w_fa_n, *v_fgo_n);
+  for (int i = 0; i < 3; ++i)
+    (*a_fgo_n_steady)(i, 0) = subs((*a_fgo_n)(i, 0), m);
 
   // TFCG
   matrix * TFCG = new matrix(3,1);
@@ -228,7 +264,7 @@ int main(int argc, char ** argv)
 
   // Rear gyrostat rotor angular velocity
   matrix * w_rb_n = new matrix(3, 1,
-                               lst((*w_ra_n)[0], wr, (*w_ra_n)[2]));
+                               lst((*w_ra_n)(0, 0), wr, (*w_ra_n)(2, 0)));
 
   // Rear gyrostat rotor partial angular velocities
   // the r-th column represents the r-th partial angular velocity
@@ -249,29 +285,29 @@ int main(int argc, char ** argv)
   // Rear gyrostat angular accleration
   matrix * alf_ra_n = new matrix(3, 1);
   for (int i = 0; i < 3; ++i) {
-    (*alf_ra_n)[i] = diff((*w_ra_n)[i], wx)*wxp
-                   + diff((*w_ra_n)[i], wy)*wyp
-                   + diff((*w_ra_n)[i], ws)*wsp
-                   + diff((*w_ra_n)[i], delta)*deltap;
+    (*alf_ra_n)(i, 0) = diff((*w_ra_n)(i, 0), wx)*wxp
+                   + diff((*w_ra_n)(i, 0), wy)*wyp
+                   + diff((*w_ra_n)(i, 0), ws)*wsp
+                   + diff((*w_ra_n)(i, 0), delta)*(wz-ws);
   }
 
   // Rear gyrostat rotor angular acceleration
   matrix * alf_rb_n = new matrix(3, 1);
   for (int i = 0; i < 3; ++i) {
-    (*alf_rb_n)[i] = diff((*w_rb_n)[i], wx)*wxp
-                   + diff((*w_rb_n)[i], wy)*wyp
-                   + diff((*w_rb_n)[i], ws)*wsp
-                   + diff((*w_rb_n)[i], wr)*wrp
-                   + diff((*w_rb_n)[i], delta)*deltap;
+    (*alf_rb_n)(i, 0) = diff((*w_rb_n)(i, 0), wx)*wxp
+                   + diff((*w_rb_n)(i, 0), wy)*wyp
+                   + diff((*w_rb_n)(i, 0), ws)*wsp
+                   + diff((*w_rb_n)(i, 0), wr)*wrp
+                   + diff((*w_rb_n)(i, 0), delta)*(wz-ws);
   }
   *alf_rb_n = (*alf_rb_n).add(cross(*w_ra_n, *w_rb_n));
 
   // Rear gyrostat mass center velocity
   matrix * v_rgo_n = new matrix(3, 1);
   *v_rgo_n = cross(*w_rb_n, *r_rn_rbo).add(cross(*w_rb_n, *r_rbo_rgo));
-  (*v_rgo_n)[0] = collect((*v_rgo_n)[0], lst(wx, wy, wz, ws, wr, wf));
-  (*v_rgo_n)[1] = collect((*v_rgo_n)[1], lst(wx, wy, wz, ws, wr, wf));
-  (*v_rgo_n)[2] = collect((*v_rgo_n)[2], lst(wx, wy, wz, ws, wr, wf));
+  (*v_rgo_n)(0, 0) = collect((*v_rgo_n)(0, 0), lst(wx, wy, wz, ws, wr, wf));
+  (*v_rgo_n)(1, 0) = collect((*v_rgo_n)(1, 0), lst(wx, wy, wz, ws, wr, wf));
+  (*v_rgo_n)(2, 0) = collect((*v_rgo_n)(2, 0), lst(wx, wy, wz, ws, wr, wf));
 
   // Front gyrostat mass center partial velocities
   // the r-th column represents the r-th partial velocity
@@ -282,24 +318,43 @@ int main(int argc, char ** argv)
     }
   }
 
+  // Represent cross(w_ra_n, cross(w_ra_n, XXX)) as M*XXX
+  matrix * w_ra_n_sqrd = new matrix(3, 3);
+  (*w_ra_n_sqrd) = 0, -(*w_ra_n)(2, 0), (*w_ra_n)(1, 0),
+                  (*w_ra_n)(2, 0), 0, -(*w_ra_n)(0, 0),
+                  -(*w_ra_n)(1, 0), (*w_ra_n)(0, 0), 0;
+  (*w_ra_n_sqrd) = (*w_ra_n_sqrd).mul(*w_ra_n_sqrd);
+
+  // Represent cross(w_rb_n, cross(w_rb_n, XXX)) as M*XXX
+  matrix * w_rb_n_sqrd = new matrix(3, 3);
+  (*w_rb_n_sqrd) = 0, -(*w_rb_n)(2, 0), (*w_rb_n)(1, 0),
+                  (*w_rb_n)(2, 0), 0, -(*w_rb_n)(0, 0),
+                  -(*w_rb_n)(1, 0), (*w_rb_n)(0, 0), 0;
+  (*w_rb_n_sqrd) = (*w_rb_n_sqrd).mul(*w_rb_n_sqrd);
+
+  // Represent cross(alf_ra_n, XXX) as M*XXX
+  matrix * alf_ra_n_M = new matrix(3, 3);
+  (*alf_ra_n_M) = 0, -(*alf_ra_n)(2, 0), (*alf_ra_n)(1, 0),
+                  (*alf_ra_n)(2, 0), 0, -(*alf_ra_n)(0, 0),
+                  -(*alf_ra_n)(1, 0), (*alf_ra_n)(0, 0), 0;
+
+  // Represent cross(alf_ra_n, XXX) as M*XXX
+  matrix * alf_rb_n_M = new matrix(3, 3);
+  (*alf_rb_n_M) = 0, -(*alf_rb_n)(2, 0), (*alf_rb_n)(1, 0),
+                  (*alf_rb_n)(2, 0), 0, -(*alf_rb_n)(0, 0),
+                  -(*alf_rb_n)(1, 0), (*alf_rb_n)(0, 0), 0;
+
   // Rear gyrostat mass center acceleration
   matrix * a_rgo_n = new matrix(3, 1);
-  for (int i = 0; i < 3; ++i) {
-    (*a_rgo_n)[i] = diff((*v_rgo_n)(i, 0), wx)*wxp
-                  + diff((*v_rgo_n)(i, 0), wy)*wyp
-                  + diff((*v_rgo_n)(i, 0), wz)*wzp
-                  + diff((*v_rgo_n)(i, 0), ws)*wsp
-                  + diff((*v_rgo_n)(i, 0), wr)*wrp
-                  + diff((*v_rgo_n)(i, 0), wf)*wfp
-                  + diff((*v_rgo_n)(i, 0), phi)*phip
-                  + diff((*v_rgo_n)(i, 0), theta)*thetap
-                  + diff((*v_rgo_n)(i, 0), delta)*deltap;
-  }
-  *a_rgo_n = (*a_rgo_n).add(cross(*w_ra_n, *v_rgo_n));
+  *a_rgo_n = cross(*w_rb_n, cross(*w_rb_n, *r_rn_rbo)) // second term in 2.7.2
+             .add(cross(*alf_rb_n, *r_rn_rbo))         // third term in 2.7.2
+             .add(cross(*w_ra_n, cross(*w_ra_n, *r_rbo_rgo)))
+             .add(cross(*alf_ra_n, *r_rbo_rgo));
 
-  // Rear gyrostat steady mass center acceleration
+  // Rear gyrostat steady turning mass center acceleration
   matrix * a_rgo_n_steady = new matrix(3, 1);
-  *a_rgo_n_steady = cross(*w_ra_n, *v_rgo_n);
+  for (int i = 0; i < 3; ++i)
+    (*a_rgo_n_steady)(i, 0) = subs((*a_rgo_n)(i, 0), m);
 
   // TRCG
   matrix * TRCG = new matrix(3,1);
@@ -323,12 +378,12 @@ int main(int argc, char ** argv)
      //  add((A_B.mul(B_R.mul(R_F.mul((*gz))))).mul_scalar(rf)))(2, 0),
      //  lst(rft, rrt, rr, rf, lr, ls, lf));
 
-  ex Frstar_R[6], Frstar_F[6], *tmpr, *tmpf;
+  ex Frstar_R[6], Frstar_R_steady[6], Frstar_F[6], Frstar_F_steady[6];
+  ex *tmpr, *tmpf;
   for (int r = 0; r < 6; ++r) {
     Frstar_R[r] = 0;
     Frstar_F[r] = 0;
 
-    /*
     // First term in Eqn 22 of Mitiguy and Reckdahl
     // This one is the nastiest expression of all, it comes from dotting the
     // partial velocities with the accelerations
@@ -344,7 +399,6 @@ int main(int argc, char ** argv)
     Frstar_F[r] -= mf*(*tmpf);  // multiply the by front assembly mass and subtract
     delete tmpr;
     delete tmpf;
-    */
 
     // Second term in Eqn 22 of Mitiguy and Reckdahl
     tmpr = new ex;
@@ -371,20 +425,38 @@ int main(int argc, char ** argv)
       *tmpf += (*p_w_fa_n)(i, r)*((*w_fa_n_x_wf_fy)(i, 0)); // First term in parenthesis in Eq (23)
       *tmpf += (*p_w_fb_n)(i, r)*((*alf_f_spin)(i,0));
     }
-    Frstar_R[r] -= Irs*(*tmpr);  // Minus so that we end up with Eqn 24
-    Frstar_F[r] -= Ifs*(*tmpf);  // Minus so that we end up with Eqn 24
+    Frstar_R[r] -= Jr*(*tmpr);  // Minus so that we end up with Eqn 24
+    Frstar_F[r] -= Jf*(*tmpf);  // Minus so that we end up with Eqn 24
     delete tmpr;
     delete tmpf;
+
+    Frstar_R_steady[r] = subs(Frstar_R[r], m);
+    Frstar_F_steady[r] = subs(Frstar_F[r], m);
   }
 
   // Output LaTeX
   cout << latex;
   writelatexHeader();
-  cout << "Rotation matrices: \n"
-       << "\\begin{align}\n  {}^NR^{A} &= " << N_A << "\n" << "\\end{align}\n"
-       << "\\begin{align}\n  {}^AR^{B} &= " << A_B << "\n" << "\\end{align}\n"
-       << "\\begin{align}\n  {}^BR^{R} &= " << B_R << "\n" << "\\end{align}\n"
-       << "\\begin{align}\n  {}^RR^{F} &= " << R_F << "\n" << "\\end{align}\n"
+  cout <<
+    "When using the choice of generalized speeds as recommended in \\cite{Mitiguy1996}, ${}^N\\omega^B \\triangleq {}^N\\bs{\\omega}^N \\cdot \\bs{b}$, the generalized inertia force of a cylindrical gyrostat $G$ in $N$ is"
+    "\\begin{align}\n"
+    "  F_r^* &= - {}^N\\bs{v}_r^{G_o} \\cdot m {}^N \\bs{a}^{G_o}\n"
+    "         - {}^N\\bs{\\omega}_r^A \\cdot {}^N\\bs{T}^{CG}\n"
+    "         - J \\left[{}^N\\bs{\\omega}_r^{A} \\cdot ({}^N\\bs{\\omega}^{A} \\times {}^N\\omega^{B} \\bs{b}) + {}^N\\bs{\\omega}_r^B \\cdot {}^N\\dot{\\omega}^B \\bs{b} \\right]\n"
+    "\\end{align}\n"
+    "Where"
+    "\\begin{align}\n"
+    "  {}^N\\bs{T}^{CG} &= \\bs{I}^{CG} \\cdot {}^N\\bs{\\omega}^A +"
+    " {}^N \\bs{\\omega}^{A} \\times \\bs{I}^{CG} \\cdot {}^N \\bs{\\omega}^A\\\\ \n"
+    " \\bs{I}^{CG} &= \\bs{I}^G - J \\bs{b}\\bs{b}\n"
+    "\\end{align}\n"
+    "with $\\bs{b}$ the spin axis of the gyrostat rotor.\n"
+    "A bicycle can be thought of as two cylindrical gyrostats whose carriers are connected by a revolute joint representing the steer axis.  In the following derivation, we use the same notation for vector quantities as above, but add the prefix $F$ and $R$ to denote quantities for the front and rear gyrostats of the bicycle.  Specifically, $FA$ denotes the front carrier (front fork), $FB$ denotes the front rotor (front wheel), $FG_o$ denotes the point mass center of the front gyrostat, $FB_o$ denotes the front wheel center.  All scalar quantities are labelled in a similar fashion, with $f$ or $r$ in the subscript to denote which gyrostat it refers to."
+//    "Rotation matrices: \n"
+//       << "\\begin{align}\n  {}^NR^{A} &= " << N_A << "\n" << "\\end{align}\n"
+//       << "\\begin{align}\n  {}^AR^{B} &= " << A_B << "\n" << "\\end{align}\n"
+//       << "\\begin{align}\n  {}^BR^{R} &= " << B_R << "\n" << "\\end{align}\n"
+//       << "\\begin{align}\n  {}^RR^{F} &= " << R_F << "\n" << "\\end{align}\n"
        << "The ordering of the generalized speeds, for purposes of calculating"
           " partial velocity and partial angular velocity matrices, is assumed"
           " to be $["
@@ -394,11 +466,12 @@ int main(int argc, char ** argv)
           << speeds[3] << ", "
           << speeds[4] << ", "
           << speeds[5] << "]$\n\n"
-       << "\\begin{align}\n  \\bs{g}_z&= "
-       << *gz << "_{F}\n" << "\\end{align}\n"
-       << "\\begin{align}\n  \\bs{r}^{FBO/FN} &= "
+//       << "\\begin{align}\n  \\bs{g}_z&= "
+//       << *gz << "_{F}\n" << "\\end{align}\n"
+"We begin with the front gyrostat.\n"
+       << "\\begin{align}\n  \\bs{r}^{FB_o/FN} &= "
        << *r_fn_fbo << "_{F}\n" << "\\end{align}\n"
-       << "\\begin{align}\n  \\bs{r}^{FGO/FBO} &= "
+       << "\\begin{align}\n  \\bs{r}^{FG_o/FB_o} &= "
        << *r_fbo_fgo << "_{F}\n" << "\\end{align}\n"
        << "\\begin{align}\n  {}^N\\bs{\\omega}^{FA} &= "
        << *w_fa_n << "_{F}\n" << "\\end{align}\n"
@@ -413,32 +486,54 @@ int main(int argc, char ** argv)
        << "\\begin{align}\n  {}^N\\bs{\\omega}^{FA} \\times  \\omega_f "
        << e_y << "_{F} &= "
        << *w_fa_n_x_wf_fy << "\\end{align}\n"
-       << "\\begin{align}\n  {}^N\\bs{v}^{FGO} &= "
-       << *v_fgo_n << "_{F}\n" << "\\end{align}\n"
-       << "Partial velocities of $FGO$ in $N$ "
-       << "\\begin{align}\n  {}^N\\bs{v}^{FGO}_{partials} &= "
+       << "\\begin{align}\n  {}^N\\bs{v}^{FG_o} &= "
+       << "{}^N\\bs{\\omega}^{FB} \\times \\bs{r}^{FB_o/FN} + {}^N\\bs{\\omega}^{FA} \\times \\bs{r}^{FG_o/FB_o} \\\\\n"
+       << "  &= " << *v_fgo_n << "_{F}\n" << "\\end{align}\n"
+       << "Partial velocities of $FG_o$ in $N$ "
+       << "\\begin{align}\n  {}^N\\bs{v}^{FG_o}_{partials} &= "
        << *p_v_fgo_n << "_{F}\n" << "\\end{align}\n"
        << "\\begin{align}\n  {}^N\\bs{\\alpha}^{FA} &= "
        << *alf_fa_n << "_{F}\n" << "\\end{align}\n"
        << "\\begin{align}\n  {}^N\\bs{\\alpha}^{FB} &= "
        << *alf_fb_n << "_{F}\n" << "\\end{align}\n"
-       << "\\begin{align}\n  {}^N\\bs{a}^{FGO} &= "
-       << *a_fgo_n << "_{F}\n" << "\\end{align}\n"
-       << "\\begin{align}\n  {}^N\\bs{a}^{FGO}_{steady} &= "
-       << *a_fgo_n_steady << "_{F}\n" << "\\end{align}\n"
-       << "\\begin{align}\n  {}^N\\bs{T}^{FCG} &= "
+       "\\begin{align}\n"
+       "{}^N\\bs{a}^{FG_o} &= "
+       "{}^N\\bs{\\omega}^{FB} \\times ({}^N\\bs{\\omega}^{FB} \\times \\bs{r}^{FB_o/FN})"
+       "+ {}^N\\bs{\\alpha}^{FB} \\times \\bs{r}^{FB_o/FN}"
+       "+ {}^N\\bs{\\omega}^{FA} \\times ({}^N\\bs{\\omega}^{FA} \\times \\bs{r}^{FG_o/FB_o})"
+       "+ {}^N\\bs{\\alpha}^{FA} \\times \\bs{r}^{FG_o/FB_o} \\\\\n"
+       "  &= \\left(" << *w_fb_n_sqrd << "_{F} + " << *alf_fb_n_M << "_{F} \\right) " << *r_fn_fbo << "_{F}"
+       << "+ \\left(" << *w_fa_n_sqrd << "_{F} + " << *alf_fa_n_M << "_{F} \\right) " << *r_fbo_fgo << "_{F}\\\\\n";
+  matrix * tmp = new matrix(3, 3, lst(0, -wx*wf+wx*wy, 0, wx*wf-wx*wy, 0, wz*wf - wz*wy, 0, wz*wy - wz*wf, 0));
+       cout << "  &= \\left(" << w_fb_n_sqrd->add(*tmp) << "_{F} + "
+       << alf_fb_n_M->sub(*tmp) << "_{F} \\right) " << *r_fn_fbo << "_{F}"
+      "+ \\left(" << *w_fa_n_sqrd << "_{F} + " << *alf_fa_n_M << "_{F} \\right) " << *r_fbo_fgo << "_{F}\\\\\n";
+       cout << "\\end{align}\n";
+//       << "\\begin{align}\n  {}^N\\bs{a}^{FGO}_{steady} &= "
+//       << w_fb_n_sqrd->add(*tmp) << "_{F}" << *r_fn_fbo << "_{F} + " << *w_fa_n_sqrd << "_{F}" << *r_fbo_fgo << "\n\\end{align}\n";
+       delete tmp;
+       cout << "\\begin{align}\n  {}^N\\bs{T}^{FCG} &= "
        << *TFCG << "_{F}\n" << "\\end{align}\n"
-       << "\\begin{align}\n  {}^N\\bs{T}^{FCG}_{steady} &= "
-       << *TFCG_steady << "_{F}\n" << "\\end{align}\n"
-       << "\\begin{align}\n  F_x^{F*} &= " << Frstar_F[0] << "\\\\\n"
-       << "  F_y^{F*} &= " << Frstar_F[1] << "\\\\\n"
-       << "  F_z^{F*} &= " << Frstar_F[2] << "\\\\\n"
-       << "  F_s^{F*} &= " << Frstar_F[3] << "\\\\\n"
-       << "  F_r^{F*} &= " << Frstar_F[4] << "\\\\\n"
-       << "  F_f^{F*} &= " << Frstar_F[5] << "\\end{align}\n"
-       << "\\begin{align}\n  \\bs{r}^{RBO/RN} &= "
+//       << "\\begin{align}\n  {}^N\\bs{T}^{FCG}_{steady} &= "
+//       << *TFCG_steady << "_{F}\n" << "\\end{align}\n"
+//     << "\\begin{align}\n"
+//     << "  F_x^{F*} &= " << Frstar_F[0] << "\\\\\n"
+//     << "  F_y^{F*} &= " << Frstar_F[1] << "\\\\\n"
+//     << "  F_z^{F*} &= " << Frstar_F[2] << "\\\\\n"
+//     << "  F_s^{F*} &= " << Frstar_F[3] << "\\\\\n"
+//     << "  F_r^{F*} &= " << Frstar_F[4] << "\\\\\n"
+//     << "  F_f^{F*} &= " << Frstar_F[5] << "\\end{align}\n"
+//     << "\\begin{align}\n"
+//     << "  F_x^{F*}{}_{steady} &= " << Frstar_F_steady[0] << "\\\\\n"
+//     << "  F_y^{F*}{}_{steady} &= " << Frstar_F_steady[1] << "\\\\\n"
+//     << "  F_z^{F*}{}_{steady} &= " << Frstar_F_steady[2] << "\\\\\n"
+//     << "  F_s^{F*}{}_{steady} &= " << Frstar_F_steady[3] << "\\\\\n"
+//     << "  F_r^{F*}{}_{steady} &= " << Frstar_F_steady[4] << "\\\\\n"
+//     << "  F_f^{F*}{}_{steady} &= " << Frstar_F_steady[5] << "\\end{align}\n"
+     "\nRear gyrostat analysis:\n"
+       << "\\begin{align}\n  \\bs{r}^{RB_o/RN} &= "
        << *r_rn_rbo << "_{R}\n" << "\\end{align}\n"
-       << "\\begin{align}\n  \\bs{r}^{RGO/RBO} &= "
+       << "\\begin{align}\n  \\bs{r}^{RG_o/RB_o} &= "
        << *r_rbo_rgo << "_{R}\n" << "\\end{align}\n"
        << "\\begin{align}\n  {}^N\\bs{\\omega}^{RA} &= "
        << *w_ra_n << "_{R}\n" << "\\end{align}\n"
@@ -454,29 +549,76 @@ int main(int argc, char ** argv)
        << *p_w_rb_n << "_{R}\n" << "\\end{align}\n"
        << "\\begin{align}\n  {}^N\\bs{\\alpha}^{RB} &= "
        << *alf_rb_n << "_{R}\n" << "\\end{align}\n"
-       << "\\begin{align}\n  {}^N\\bs{v}^{RGO} &= "
+       << "\\begin{align}\n  {}^N\\bs{v}^{RG_o} &= "
        << *v_rgo_n << "_{R}\n" << "\\end{align}\n"
-       << "Partial velocities of $RGO$ in $N$ "
-       << "\\begin{align}\n  {}^N\\bs{v}^{RGO}_{partials} &= "
+       << "Partial velocities of $RG_o$ in $N$ "
+       << "\\begin{align}\n  {}^N\\bs{v}^{RG_o}_{partials} &= "
        << *p_v_rgo_n << "_{R}\n" << "\\end{align}\n"
-       << "\\begin{align}\n  {}^N\\bs{a}^{RGO} &= "
-       << *a_rgo_n << "_{R}\n" << "\\end{align}\n"
-       << "\\begin{align}\n  {}^N\\bs{a}^{RGO}_{steady} &= "
-       << *a_rgo_n_steady << "_{R}\n" << "\\end{align}\n"
-       << "\\begin{align}\n  {}^N\\bs{T}^{RCG} &= "
-       << *TRCG << "_{R}\n" << "\\end{align}\n"
-       << "\\begin{align}\n  {}^N\\bs{T}^{RCG}_{steady} &= "
-       << *TRCG_steady << "_{R}\n" << "\\end{align}\n"
-       << "\\begin{align}\n  F_x^{R*} &= " << Frstar_R[0] << "\\\\\n"
-       << "  F_y^{R*} &= " << Frstar_R[1] << "\\\\\n"
-       << "  F_z^{R*} &= " << Frstar_R[2] << "\\\\\n"
-       << "  F_s^{R*} &= " << Frstar_R[3] << "\\\\\n"
-       << "  F_r^{R*} &= " << Frstar_R[4] << "\\\\\n"
-       << "  F_f^{R*} &= " << Frstar_R[5] << "\\end{align}\n"
-       << "Holonomic constraint\n"
-       << "\\begin{align}\n  f_{hc}(\\phi, \\theta, \\delta) &= "
-       << hc << "\n" << "\\end{align}\n"
-       << "\\end{document}\n";
+//       << "\\begin{align}\n  {}^N\\bs{a}^{RG_o} &= "
+//       << *a_rgo_n << "_{R}\n\\end{align}\n"
+
+       "\\begin{align}\n"
+       "  {}^N\\bs{a}^{RG_o} &= "
+       "{}^N\\bs{\\omega}^{RB} \\times ({}^N\\bs{\\omega}^{RB} \\times \\bs{r}^{RB_o/RN})"
+       "+ {}^N\\bs{\\alpha}^{RB} \\times \\bs{r}^{RB_o/RN}"
+       "+ {}^N\\bs{\\omega}^{RA} \\times ({}^N\\bs{\\omega}^{RA} \\times \\bs{r}^{RG_o/RB_o})"
+       "+ {}^N\\bs{\\alpha}^{RA} \\times \\bs{r}^{RG_o/RB_o} \\\\\n"
+       "  &= \\left(" << *w_rb_n_sqrd << "_{R} + " << *alf_rb_n_M << "_{R} \\right) " << *r_rn_rbo << "_{R}\\\\\n"
+       << "&+ \\left(" << *w_ra_n_sqrd << "_{R} + " << *alf_ra_n_M << "_{R} \\right) " << *r_rbo_rgo << "_{R}\\\\\n";
+  tmp = new matrix(3, 3);
+  *tmp = 0, -wsp, wrp,
+            wsp, 0, sin(delta)*wyp - cos(delta)*wxp,
+            -wrp, -sin(delta)*wyp + cos(delta)*wxp, 0;
+  cout << "  &= \\left(" << (*w_rb_n_sqrd).add((*alf_rb_n_M).sub(*tmp)) << "_{R} + "
+       << *tmp << "_{R} \\right) " << *r_rn_rbo << "_{R}\\\\\n";
+  delete tmp;
+  tmp = new matrix(3, 3);
+  *tmp = 0, -wsp, wyp*cos(delta)+wxp*sin(delta),
+         wsp, 0, -wxp*cos(delta)+wyp*sin(delta),
+         -wyp*cos(delta) - wxp*sin(delta), wxp*cos(delta)-wyp*sin(delta), 0;
+  cout << "&+ \\left(" << (*w_rb_n_sqrd).add((*alf_ra_n_M).sub(*tmp)) << "_{R} + " << *tmp << "_{R} \\right) " << *r_rbo_rgo << "_{R}\\\\\n"
+       "\\end{align}\n"
+//      "+ \\left(" << *w_fa_n_sqrd << "_{F} + " << *alf_fa_n_M << "_{F} \\right) " << *r_fbo_fgo << "_{F}\\\\\n";
+//       << "\\begin{align}\n  {}^N\\bs{a}^{FGO}_{steady} &= "
+//       << w_fb_n_sqrd->add(*tmp) << "_{F}" << *r_fn_fbo << "_{F} + " << *w_fa_n_sqrd << "_{F}" << *r_fbo_fgo << "\n\\end{align}\n";
+//       delete tmp;
+
+
+//       << "\\begin{align}\n  {}^N\\bs{a}^{RGO}_{steady} &= "
+//       << *a_rgo_n_steady << "_{R}\n" << "\\end{align}\n"
+"\\begin{align}\n  {}^N\\bs{T}^{RCG} &= "
+<< *TRCG << "_{R}\n\\end{align}\n"
+//       << "\\begin{align}\n  {}^N\\bs{T}^{RCG}_{steady} &= "
+//       << *TRCG_steady << "_{R}\n" << "\\end{align}\n"
+//       << "\\begin{align}\n  F_x^{R*} &= " << Frstar_R[0] << "\\\\\n"
+//       << "  F_y^{R*} &= " << Frstar_R[1] << "\\\\\n"
+//       << "  F_z^{R*} &= " << Frstar_R[2] << "\\\\\n"
+//       << "  F_s^{R*} &= " << Frstar_R[3] << "\\\\\n"
+//       << "  F_r^{R*} &= " << Frstar_R[4] << "\\\\\n"
+//       << "  F_f^{R*} &= " << Frstar_R[5] << "\\end{align}\n"
+//       << "\\begin{align}\n"
+//       << "  F_x^{R*}{}_{steady} &= " << Frstar_R_steady[0] << "\\\\\n"
+//       << "  F_y^{R*}{}_{steady} &= " << Frstar_R_steady[1] << "\\\\\n"
+//       << "  F_z^{R*}{}_{steady} &= " << Frstar_R_steady[2] << "\\\\\n"
+//       << "  F_s^{R*}{}_{steady} &= " << Frstar_R_steady[3] << "\\\\\n"
+//       << "  F_r^{R*}{}_{steady} &= " << Frstar_R_steady[4] << "\\\\\n"
+//       << "  F_f^{R*}{}_{steady} &= " << Frstar_R_steady[5] << "\\end{align}\n"
+//"Holonomic constraint\n"
+//"\\begin{align}\n  f_{hc}(\\phi, \\theta, \\delta) &= "
+//<< hc << "\n\\end{align}\n"
+"\\bibliographystyle{plain}\n"
+"\\bibliography{bicycle}\n"
+"\\end{document}\n";
+
+
+  ofstream file("eoms_generated.c");
+  file << csrc;
+  file << "#include <Eigen/Dense>\n"
+       "typedef Matrix<6, 6, double> Matrix66d;\n"
+       "typedef Matrix<6, 1, double> Matrix61d;\n"
+       "int main(void)\n{\n"
+       "}\n";
+  file.close();
 
 
   // Free dynamically allocated memory
@@ -485,6 +627,10 @@ int main(int argc, char ** argv)
   delete p_w_fa_n;
   delete w_fb_n;
   delete w_fa_n_x_wf_fy;
+  delete w_fb_n_sqrd;
+  delete w_fa_n_sqrd;
+  delete alf_fa_n_M;
+  delete alf_fb_n_M;
   delete alf_f_spin;
   delete p_w_fb_n;
   delete alf_fa_n;
@@ -520,50 +666,11 @@ int main(int argc, char ** argv)
   // Leave main
   return 0;
 }
-/*
-  // Steady turning conditions
-  exmap m;
-  m[phip] = 0;
-  m[thetap] = 0;
-  m[deltap] = 0;
-  m[wxp] = 0;
-  m[wyp] = 0;
-  m[wzp] = 0;
-  m[wsp] = 0;
-  m[wfp] = 0;
-  m[wrp] = 0;
-
-
-  ex v_gfo[3][6];
-  symbol speeds[6] = {wx, wy, wz, ws, wr, wf};
-  cout << "[\n";
-  for (int i = 0; i < 3; ++i) {
-    cout << "[";
-    for (int j = 0; j < 6; ++j)
-      cout << (v_gfo[i][j] = diff(v_gfo_n[i], speeds[j])) << ", ";
-    cout << "]\n";
-  }
-  cout << "]\n";
-  ex v_gfo_grad[3][3][6];
-  symbol coords[3] = {phi, theta, delta};
-  for (int i = 0; i < 3; ++i) {
-    cout << "[\n";
-    for (int j = 0; j < 3; ++ j) {
-      cout << "[";
-      for (int k = 0; k < 6; ++k) {
-        cout << (v_gfo_grad[i][j][k] = diff(v_gfo[j][k], coords[j])) << ", ";
-      }
-      cout << "]\n";
-    }
-    cout << "]\n\n";
-  }
-
-*/
 
 void writelatexHeader(void)
 {
   cout <<
-"\\documentclass[landscape,a0paper,11pt]{article}\n"
+"\\documentclass[landscape,a2paper,11pt]{article}\n"
 "\\usepackage[margin=1in,centering]{geometry}\n"
 "\\usepackage{amsmath}\n"
 "\\usepackage{amssymb}\n"
@@ -577,10 +684,9 @@ ex dot(const matrix & a, const matrix & b)
   return a(0, 0)*b(0, 0) + a(1, 0)*b(1, 0) + a(2, 0)*b(2, 0);
 }
 
-matrix cross(const matrix &a, const matrix & b)
+matrix cross(const matrix & a, const matrix & b)
 {
   return matrix(3, 1, lst(a(1,0)*b(2,0) - a(2,0)*b(1,0),
                           a(2,0)*b(0,0) - a(0,0)*b(2,0),
                           a(0,0)*b(1,0) - a(1,0)*b(0,0)));
 }
-
