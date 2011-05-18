@@ -1,8 +1,15 @@
-PROJECT_NAME           = ${CPACK_PACKAGE_NAME}
-PROJECT_NUMBER         = ${VERSION}
-OUTPUT_DIRECTORY       = doc
+PROJECT_NUMBER         = ${OBD_VERSION_COMMIT}
+OUTPUT_DIRECTORY       = ${PROJECT_BINARY_DIR}/doc
 INPUT                  = ${PROJECT_SOURCE_DIR}/whipple/include
-                         ${PROJECT_SOURCE_DIR}/whipple/src
-                         ${PROJECT_SOURCE_DIR}/whipple/examples
-                         ${PROJECT_SOURCE_DIR}/whipple/tests
-                         ${PROJECT_SOURCE_DIR}/bikegui
+
+PROJECT_NAME           = "Open Bicycle Dynamics"
+DOXYFILE_ENCODING      = UTF-8
+
+EXTRACT_PRIVATE        = YES
+OUTPUT_LANGUAGE        = English
+GENERATE_HTML          = YES
+GENERATE_PDF           = YES
+USE_MATHJAX            = YES
+PDF_HYPERLINKS         = YES
+USE_PDFLATEX           = YES
+

@@ -19,54 +19,135 @@
 #ifndef WHIPPLE_H
 #define WHIPPLE_H
 
-#include <iostream>
-#include <fstream>
-#include <cstring>
-#include <cmath>
-#include <gsl/gsl_errno.h>
-#include <gsl/gsl_odeiv.h>
-#include <gsl/gsl_roots.h>
-#include <gsl/gsl_eigen.h>
+/**  \brief Whipple bicycle class.
+ *
+ * This class represents the Whipple bicycle model and provides means to:
+ *   - Simulate nonlinear equations of motion
+ *   - Calculate steady turning equilibrium conditions
+ *   - Calculate eigenvalues of equilibrium
+*/
 
-#define Z_MAX 987
-#define ZS_MAX 652
-
-extern "C" {
-  inline int eomwrapper(double t, const double x[10], double f[10], void * params);
-}
-
-// structure use to store command line options passed to steady turning code
-typedef struct {
-  char outfolder[512];// output folder name
-  int N;           // # of points to mesh steer in [0, pi]
-  bool all;           // controls whether to mesh whole feasible region
-  gsl_vector * iso_v, * iso_t, * iso_mew;
-} steadyOpts_t;
-
-// Constant parameters used in the model derivation
-typedef struct {
-  double ICyy,IDxx,IDxz,IDyy,IDzz,IExx,IExz,IEyy,IEzz,IFyy;
-  double g,lf,lfx,lfz,lr,lrx,lrz,ls,mr,mf,rf,rft,rr,rrt;
-} WhippleParams;
-
-// Constant parameters used in the Meijaard derivation
-typedef struct {
-  double rr, rrt, rf, rft, w, c, lambda;  // Wheel and frame geometric parameters
-  double mr, mb, mh, mf;          // R. whl, rear frame, fork, F. whl mass
-  double IRxx, IRyy;              // Rear wheel inertia scalars, IRxx == IRzz
-  double IBxx, IByy, IBzz, IBxz;  // Rear frame and rider inertia scalars
-  double IHxx, IHyy, IHzz, IHxz;  // Front fork and handlebar inertia scalars
-  double IFxx, IFyy;              // Front wheel inertia scalars, IFxx == IFzz
-  double xb, zb, xh, zh;          // COM locations relative to rear contact
-  double g;
-} MJWhippleParams;
+// Forward declarations
+struct GyrostatParams;
+struct MeijaardParams;
 
 class Whipple {
   public:
+    /**
+     * Default constructor
+     */
+    Whipple();
+
+    /**
+     * Constructor
+     */
+    Whipple(const struct GyrostatParams & params);
+
+    /**
+     * Constructor
+     */
+    Whipple(const struct MeijaardParams & params);
+
+
+    /**
+     * Destructor
+     */
+    ~Whipple();
+
+  private:
+    /**
+     * Rear Gyrostat Constants
+     */
+    double Jr, Irxx, Iryy, Irzz, Irxz, mr;
+    double lr, xr, zr, Rr, rr;
+
+    /**
+     * Front Gyrostat Constants
+     */
+    double Jf, Ifxx, Ifyy, Ifzz, Ifxz, mf;
+    double lf, xf, zf, Rf, rf;
+
+    /**
+     * Steer axis offset and gravity
+     */
+    double ls, g;
+
+    /**
+     * \brief Complete State of bicycle
+     *
+     * This array includes both the independent and dependent state variables,
+     * as well as variables which are ignorable with respect to the dynamic
+     * equations.
+     *
+     * The ordering of this state vector is:
+     *   - Yaw
+     *   - Lean
+     *   - Pitch
+     *   - Steer
+     *   - Rear wheel angle
+     *   - Front wheel angle
+     *   - Rear wheel ground contact in n_x direction
+     *   - Rear wheel ground contact in n_y direction
+     *   - omegax
+     *   - omegay
+     *   - omegaz
+     *   - omegas
+     *   - omegar
+     *   - omegas
+     */
+    double x_complete[14];
+
+    /**
+     * \brief Minimal State of bicycle
+     *
+     * This array includes only the independent state variables.
+     * The ordering of this state vector is:
+     *   - \f$q_1\f$
+     *   - \f$q_2\f$
+     *   - \f$u_1\f$
+     *   - \f$u_2\f$
+     *   - \f$u_3\f$
+     *   - \f$\psi\f$ Yaw
+     *   - \f$\theta_r\f$Rear wheel angle
+     *   - \f$\theta_f\f$Front wheel angle
+     *   - \f$x\f$ Rear wheel ground contact in \f$\mathbf{n}_x\f$ direction
+     *   - \f$y\f$ Rear wheel ground contact in \f$\mathbf{n}_y\f$ direction
+     *
+     * q1, q2 represent the two independent configuration variables, they will
+     * be either lean and pitch, lean and steer, or pitch and steer.
+     *
+     * u1, u2, u3 represent the two independent configuration variables, they
+     * will be selected from the set wx, wy, wz, ws, wr, wf.  There are 20
+     * possible choices of independent generalized speeds (6!/(6-3)!/3!)
+     */
+    double x[10];
+
+    /**
+     * \brief Indices of independent generalized coordinates
+     *
+     * The holonomic constraint imposes constrains the lean, pitch and steer
+     * angles.  The most numerically reliable way to evalue which of these
+     * three should be dependent is to compute the unit normal to the surface
+     * of constraint, and take the dependent variable to be the one whose
+     * component in the unit normal is largest.
+     *
+     * For motion near upright, pitch should be chosen as dependent.  The
+     * farther the bicycle leans, the less this becomes true.
+     *
+     */
+    int qIndependent[2];
+
+    /**
+     * \brief Indices of independent generalized speeds
+     */
+    int uIndependent[3];
+
+
+
+    /*
+  public:
     double t, tf, h;
     // Constant parameters
-    double ICyy,IDxx,IDxz,IDyy,IDzz,IExx,IExz,IEyy,IEzz,IFyy;
-    double g,lf,lfx,lfz,lr,lrx,lrz,ls,mr,mf,rf,rft,rr,rrt;
     // State variables, and their derivatives
     double q0,q1,q2,q3,q4,q5,q6,q7,u1,u3,u5;
     double q0p,q1p,q2p,q3p,q4p,q5p,q6p,q7p,u0p,u1p,u2p,u3p,u4p,u5p;
@@ -116,9 +197,6 @@ class Whipple {
     double u5s_s, Ts_s, Ry_s, Rz_s, Fy_s, Fz_s;
     double F[11], dF[36];
 
-    // Member functions
-    Whipple();
-    ~Whipple();
 
     // Mutators
     void calcEvals(void);
@@ -126,7 +204,7 @@ class Whipple {
     void computeOutputs(void);
     void eoms(void);
 
-    /**
+    /
      * Method for evaluating z's which are constant with respect to the bicycle
      * state.
      *
@@ -135,7 +213,7 @@ class Whipple {
      * @post z's which are constant with respect to the bicycle state are evaluated.
      *
      * @return None
-     * */
+     * /
     void evalConstants(void);
     void evolve(double tj, double * state);
     void getFourValues(void);
@@ -170,6 +248,6 @@ class Whipple {
   private:
     bool validInertia(double Ixx, double Iyy, double Izz, double Ixz) const;
     void insertionSort(int N, double ar[]) const;
-
+  */
 };
 #endif

@@ -8,7 +8,7 @@ option(obd_build_tests "Build all of OBD's tests." ON)
 option(obd_build_gui "Build Qt4 gui tool." ON)
 
 # Option for building documentation using Doxygen
-option(obd_build_docs "Build Doxygen documentation." OFF)
+option(obd_build_docs "Build Doxygen documentation." ON)
 
 # We need to call enable_testing() before any subdirectories are added
 if (obd_build_tests)
@@ -69,7 +69,10 @@ if (obd_build_docs)
                    ${PROJECT_BINARY_DIR}/Doxyfile)
     add_custom_target(doc
                       ${DOXYGEN_EXECUTABLE}
-                      ${PROJECT_BINARY_DIR}/Doxyfile)
+                      ${PROJECT_BINARY_DIR}/Doxyfile
+                      WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
+                      COMMENT "Generating API Documentation with Doxygen"
+                      VERBATIM)
 endif()
 
 if (obd_build_gui)
