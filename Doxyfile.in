@@ -12,4 +12,8 @@ GENERATE_PDF           = YES
 USE_MATHJAX            = YES
 PDF_HYPERLINKS         = YES
 USE_PDFLATEX           = YES
+SORT_MEMBER_DOCS       = NO
+SEARCHENGINE           = YES
+SERVER_BASED_SEARCH    = NO
+PAPER_TYPE             = letter
 

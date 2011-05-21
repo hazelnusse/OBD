@@ -18,71 +18,97 @@
  */
 #ifndef WHIPPLEPARAMS_H
 #define WHIPPLEPARAMS_H
-/** Parameters used in the gyrostat derivation
+
+/** \file whippleparams.h
+ * \brief Definitions of structures for model parameterizations.
+ */
+
+/** \struct GyrostatParams
+ *
+ * \brief Parameters used for the front and rear assemblies
+ *
+ * The front and rear assemblies of the bicycle may each be viewed as a
+ * cylindrical gyrostat with a torus representing each wheel and a laterally
+ * symmetric rigid body representing the frame and/or fork.  Eleven parameters
+ * are need to describe each gyrostat.
  */
 struct GyrostatParams {
-  double Jr,    /**< Rear wheel spin moment of inertia  */
-         Irxx,  /**< Rear gyrostat xx moment of inertia */
-         Iryy,  /**< Rear gyrostat yy moment of inertia */
-         Irzz,  /**< Rear gyrostat zz moment of inertia */
-         Irxz,  /**< Rear gyrostat xz moment of inertia */
-         mr,    /**< Rear gyrostat total mass */
-         xr,    /**< Distance from rear wheel center to mass center in body
+  double J,    /**< Wheel spin moment of inertia  */
+         Ixx,  /**< Gyrostat xx moment of inertia */
+         Iyy,  /**< Gyrostat yy moment of inertia */
+         Izz,  /**< Gyrostat zz moment of inertia */
+         Ixz,  /**< Gyrostat xz moment of inertia */
+         m,    /**< Gyrostat total mass */
+         x,    /**< Distance from wheel center to mass center in body
                   fixed x direction */
-         zr,    /**< Distance from rear wheel center to mass center in body
+         z,    /**< Distance from wheel center to mass center in body
                   fixed z direction */
-         lr,    /**< Distance from rear wheel center to steer axis */
-         Rr,    /**< Rear wheel major radius */
-         rr,    /**< Rear wheel minor radius */
-
-         Jf,    /**< Front wheel spin moment of inertia  */
-         Ifxx,  /**< Front gyrostat xx moment of inertia */
-         Ifyy,  /**< Front gyrostat yy moment of inertia */
-         Ifzz,  /**< Front gyrostat zz moment of inertia */
-         Ifxz,  /**< Front gyrostat xz moment of inertia */
-         mf,    /**< Front gyrostat total mass */
-         xf,    /**< Distance from front wheel center to mass center in body
-                  fixed x direction */
-         zf,    /**< Distance from front wheel center to mass center in body
-                  fixed z direction */
-         lf,    /**< Distance from front wheel center to steer axis */
-         Rf,    /**< Front wheel major radius */
-         rf,    /**< Front wheel minor radius */
-         ls,    /**< Steer axis offset */
-         g;     /**< Gravitational constant */
+         l,    /**< Distance from wheel center to steer axis */
+         R,    /**< Wheel major radius */
+         r;    /**< Wheel minor radius */
 };
 
 /** \struct MeijaardParams
  *
- * Parameters used in the Meijaard derivation
+ * \brief Parameters used in the Meijaard derivation
  *
+ * In the reference configuration, the bicycle is upright, with zero steer,
+ * and is pointed in the positive \f$x\f$ direction relative to the inertial
+ * frame.  The wheelbase \f$w\f$, trail \f$c\f$, and steer axis tilt
+ * \f$ \lambda \f$, and the mass center locations \f$ x_B, z_B, x_H, z_H \f$, are
+ * all defined relative to an inertial frame with origin at the rear wheel
+ * contact, when the bicycle is in the reference configuration.  Similarly, the
+ * inertia scalars are all defined with respect to body fixed frames which are
+ * aligned with the inertial frame when the bicycle is in the reference
+ * configuration.
  */
 struct MeijaardParams {
-  double w,         /**< Wheel base */
-         c,         /**< Trail */
-         lambda,    /**< Steer axis tilt (\f$ \pi/2 \f$ - head angle) */
-         g,         /**< Gravitational constant */
-         rR,        /**< Rear wheel radius */
-         mR,        /**< Rear wheel mass */
-         IRxx,      /**< Rear wheel transverse mass moment of inertia */
-         IRyy,      /**< Rear wheel spin moment of inertia */
-         xB,/**< Steer axis tilt (\f$ \pi/2 \f$ - head angle) */
-         zB,/**< Steer axis tilt (\f$ \pi/2 \f$ - head angle) */
-         mB,/**< Steer axis tilt (\f$ \pi/2 \f$ - head angle) */
-         IBxx,/**< Steer axis tilt (\f$ \pi/2 \f$ - head angle) */
-         IByy,/**< Steer axis tilt (\f$ \pi/2 \f$ - head angle) */
-         IBzz,/**< Steer axis tilt (\f$ \pi/2 \f$ - head angle) */
-         IBxz,/**< Steer axis tilt (\f$ \pi/2 \f$ - head angle) */
-         xH,/**< Steer axis tilt (\f$ \pi/2 \f$ - head angle) */
-         zH,/**< Steer axis tilt (\f$ \pi/2 \f$ - head angle) */
-         mH,/**< Steer axis tilt (\f$ \pi/2 \f$ - head angle) */
-         IHxx,/**< Steer axis tilt (\f$ \pi/2 \f$ - head angle) */
-         IHyy,/**< Steer axis tilt (\f$ \pi/2 \f$ - head angle) */
-         IHzz,/**< Steer axis tilt (\f$ \pi/2 \f$ - head angle) */
-         IHxz,/**< Steer axis tilt (\f$ \pi/2 \f$ - head angle) */
-         rF,/**< Steer axis tilt (\f$ \pi/2 \f$ - head angle) */
-         mF,/**< Steer axis tilt (\f$ \pi/2 \f$ - head angle) */
-         IFxx,/**< Steer axis tilt (\f$ \pi/2 \f$ - head angle) */
-         IFyy;/**< Steer axis tilt (\f$ \pi/2 \f$ - head angle) */
+  double w,      /**< \f$w\f$, Wheel base. */
+         c,      /**< \f$c\f$, Trail. */
+         lambda, /**< \f$\lambda\f$, Steer axis tilt (\f$ \pi/2 \f$ - head
+                   angle). */
+         g,       /**< \f$g\f$, Gravitational constant. */
+         rR,     /**< \f$ r_{\textrm{R}} \f$, Rear wheel radius. */
+         mR,     /**< \f$m_{\textrm{R}}\f$, Rear wheel mass. */
+         IRxx,   /**< \f$I_{\textrm{R}xx}\f$, central moment of inertia of
+                   \f$\textrm{R}\f$ about any line in plane of symmetry. */
+         IRyy,   /**< \f$I_{\textrm{R}xx}\f$, central moment of inertia of
+                   \f$\textrm{R}\f$ for \f$\mathbf{n}_y\f$. */
+         xB,     /**< \f$x_{\textrm{B}}\f$, rear frame mass center location in
+                   \f$\mathbf{n}_x\f$
+                   direction. */
+         zB,     /**< \f$z_{\textrm{B}}\f$, rear frame mass center location in
+                   \f$\mathbf{n}_z\f$
+                   direction. */
+         mB,     /**< \f$m_{\textrm{B}}\f$, rear frame mass. */
+         IBxx,   /**< \f$I_{\textrm{B}xx}\f$ central moment of inertia of
+                   \f$\textrm{B}\f$ for \f$\mathbf{n}_x\f$. */
+         IByy,   /**< \f$I_{\textrm{B}yy}\f$ central moment of inertia of
+                   \f$\textrm{B}\f$ for \f$\mathbf{n}_y\f$. */
+         IBzz,   /**< \f$I_{\textrm{B}zz}\f$ central moment of inertia of
+                   \f$\textrm{B}\f$ for \f$\mathbf{n}_z\f$. */
+         IBxz,   /**< \f$I_{\textrm{B}xz}\f$ central product of inertia of
+                   \f$\textrm{B}\f$ for \f$\mathbf{n}_x\f$ and
+                   \f$\mathbf{n}_z\f$. */
+         xH,     /**< \f$x_{\textrm{H}}\f$, front frame mass center location in
+                   \f$\mathbf{n}_x\f$. */
+         zH,     /**< \f$z_{\textrm{H}}\f$, front frame mass center location in
+                   \f$\mathbf{n}_z\f$. */
+         mH,     /**< \f$m_{\textrm{H}}\f$, front frame mass. */
+         IHxx,   /**< \f$I_{\textrm{H}xx}\f$ central moment of inertia of
+                   \f$\textrm{H}\f$ for \f$\mathbf{n}_x\f$. */
+         IHyy,   /**< \f$I_{\textrm{H}yy}\f$ central moment of inertia of
+                   \f$\textrm{H}\f$ for \f$\mathbf{n}_y\f$. */
+         IHzz,   /**< \f$I_{\textrm{H}zz}\f$ central moment of inertia of
+                   \f$\textrm{H}\f$ for \f$\mathbf{n}_z\f$. */
+         IHxz,   /**< \f$I_{\textrm{H}xz}\f$ central product of inertia of
+                   \f$\textrm{H}\f$ for \f$\mathbf{n}_x\f$ and
+                   \f$\mathbf{n}_z\f$ */
+         rF,     /**< \f$r_\textrm{F}\f$, Front wheel radius. */
+         mF,     /**< \f$m_\textrm{F}\f$, Front wheel mass. */
+         IFxx,   /**< \f$I_{\textrm{F}xx}\f$, central moment of inertia of
+                   \f$\textrm{R}\f$ about any line in plane of symmetry. */
+         IFyy;   /**< \f$I_{\textrm{F}xx}\f$, central moment of inertia of
+                   \f$\textrm{R}\f$ for \f$\mathbf{n}_y\f$. */
 };
 #endif

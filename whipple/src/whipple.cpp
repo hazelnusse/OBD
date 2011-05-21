@@ -25,12 +25,12 @@ Whipple::Whipple()
 
 }
 
-Whipple::Whipple(const struct GyrostatParams & params)
+Whipple::Whipple(const GyrostatParams & params)
 {
 
 }
 
-Whipple::Whipple(const struct MeijaardParams & params)
+Whipple::Whipple(const MeijaardParams & params)
 {
 
 }
