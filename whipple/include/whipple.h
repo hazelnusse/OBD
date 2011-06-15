@@ -28,7 +28,6 @@
  *   - Calculate steady turning equilibrium conditions
  *   - Calculate eigenvalues of equilibrium
 */
-
 class Whipple {
   public:
     /**

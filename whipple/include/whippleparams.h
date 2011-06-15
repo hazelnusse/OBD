@@ -23,16 +23,15 @@
  * \brief Definitions of structures for model parameterizations.
  */
 
-/** \struct GyrostatParams
- *
- * \brief Parameters used for the front and rear assemblies
+/** \brief Parameters used for the front and rear assemblies
  *
  * The front and rear assemblies of the bicycle may each be viewed as a
  * cylindrical gyrostat with a torus representing each wheel and a laterally
  * symmetric rigid body representing the frame and/or fork.  Eleven parameters
  * are need to describe each gyrostat.
  */
-struct GyrostatParams {
+class GyrostatParams {
+  public :
   double J,    /**< Wheel spin moment of inertia  */
          Ixx,  /**< Gyrostat xx moment of inertia */
          Iyy,  /**< Gyrostat yy moment of inertia */
@@ -48,9 +47,7 @@ struct GyrostatParams {
          r;    /**< Wheel minor radius */
 };
 
-/** \struct MeijaardParams
- *
- * \brief Parameters used in the Meijaard derivation
+/** \brief Parameters used in the Meijaard derivation
  *
  * In the reference configuration, the bicycle is upright, with zero steer,
  * and is pointed in the positive \f$x\f$ direction relative to the inertial
@@ -62,7 +59,8 @@ struct GyrostatParams {
  * aligned with the inertial frame when the bicycle is in the reference
  * configuration.
  */
-struct MeijaardParams {
+class MeijaardParams {
+  public :
   double w,      /**< \f$w\f$, Wheel base. */
          c,      /**< \f$c\f$, Trail. */
          lambda, /**< \f$\lambda\f$, Steer axis tilt (\f$ \pi/2 \f$ - head
