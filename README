@@ -23,7 +23,7 @@ and build it:
     $ git clone git://github.com/hazelnusse/OBD.git
     $ mkdir OBD-build
     $ cd OBD-build
-    $ cmake ../OBD-build
+    $ cmake ../OBD
     $ make
 
 cmake also supports a graphical configuration, use cmake-gui instead of cmake.
